@@ -426,6 +426,54 @@ select {
   line-height: 1.5;
 }
 
+.guide-section {
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 58%),
+    color-mix(in srgb, var(--panel-solid) 84%, transparent);
+}
+
+.guide-steps {
+  display: grid;
+  gap: 9px;
+}
+
+.guide-step {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.guide-step b {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--accent);
+  font-size: 0.82rem;
+}
+
+.guide-step p,
+.guide-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.guide-note {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
+}
+
+.guide-note strong {
+  color: var(--text);
+}
+
 .mini-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
