@@ -4,6 +4,11 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const elements = {
   canvas: $("#ambientCanvas"),
   themeToggle: $("#themeToggle"),
+  openHelpTop: $("#openHelpTop"),
+  openHelpGuide: $("#openHelpGuide"),
+  helpDialog: $("#helpDialog"),
+  closeHelp: $("#closeHelp"),
+  closeHelpFooter: $("#closeHelpFooter"),
   modeStatus: $("#modeStatus"),
   statGenerated: $("#statGenerated"),
   statFavorites: $("#statFavorites"),
@@ -1091,6 +1096,22 @@ function toggleTheme() {
   localStorage.setItem(store.theme, next);
 }
 
+function openHelp() {
+  if (typeof elements.helpDialog.showModal === "function") {
+    elements.helpDialog.showModal();
+  } else {
+    elements.helpDialog.setAttribute("open", "");
+  }
+}
+
+function closeHelp() {
+  if (typeof elements.helpDialog.close === "function") {
+    elements.helpDialog.close();
+  } else {
+    elements.helpDialog.removeAttribute("open");
+  }
+}
+
 function bindEvents() {
   elements.userInput.addEventListener("input", () => {
     elements.charCount.textContent = elements.userInput.value.length;
@@ -1209,6 +1230,13 @@ function bindEvents() {
   elements.exportMd.addEventListener("click", () => exportFile("md"));
   elements.copyPrompt.addEventListener("click", () => copyText(state.currentResult.prompt, "结果已复制"));
   elements.themeToggle.addEventListener("click", toggleTheme);
+  elements.openHelpTop.addEventListener("click", openHelp);
+  elements.openHelpGuide.addEventListener("click", openHelp);
+  elements.closeHelp.addEventListener("click", closeHelp);
+  elements.closeHelpFooter.addEventListener("click", closeHelp);
+  elements.helpDialog.addEventListener("click", (event) => {
+    if (event.target === elements.helpDialog) closeHelp();
+  });
 }
 
 function initAmbientCanvas() {

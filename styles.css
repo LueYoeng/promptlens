@@ -474,6 +474,18 @@ select {
   color: var(--text);
 }
 
+.guide-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.guide-open-button {
+  width: 100%;
+  min-height: 42px;
+}
+
 .mini-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -959,6 +971,193 @@ input[type="range"] {
   transform: translate(-50%, 0);
 }
 
+.help-dialog {
+  width: min(1080px, calc(100% - 32px));
+  max-height: min(860px, calc(100vh - 32px));
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--panel-solid);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+}
+
+.help-dialog::backdrop {
+  background: rgba(14, 20, 30, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.help-window {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: min(860px, calc(100vh - 32px));
+}
+
+.help-header,
+.help-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 68%),
+    var(--panel-solid);
+}
+
+.help-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+}
+
+.help-header h2 {
+  margin: 4px 0 0;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+}
+
+.close-glyph {
+  position: relative;
+  width: 18px;
+  height: 18px;
+}
+
+.close-glyph::before,
+.close-glyph::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 1px;
+  width: 2px;
+  height: 16px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.close-glyph::before {
+  transform: rotate(45deg);
+}
+
+.close-glyph::after {
+  transform: rotate(-45deg);
+}
+
+.help-body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.help-nav {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-strong) 62%, transparent);
+  overflow: auto;
+}
+
+.help-nav a {
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.help-nav a:hover,
+.help-nav a:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.help-content {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.help-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-solid) 88%, transparent);
+}
+
+.help-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.08rem;
+}
+
+.help-card p,
+.help-card li {
+  color: var(--muted);
+  line-height: 1.68;
+}
+
+.help-card p {
+  margin: 0 0 10px;
+}
+
+.help-card p:last-child {
+  margin-bottom: 0;
+}
+
+.help-card ol,
+.help-card ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.help-card li + li {
+  margin-top: 6px;
+}
+
+.help-card strong,
+.help-example b,
+.help-card summary {
+  color: var(--text);
+}
+
+.help-example {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-strong) 56%, transparent);
+}
+
+.help-example p {
+  margin: 0;
+}
+
+.help-card details {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.help-card details:first-of-type {
+  border-top: 0;
+}
+
+.help-card summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.help-card details p {
+  margin-top: 8px;
+}
+
 @media (max-width: 1320px) {
   .product-grid {
     grid-template-columns: minmax(300px, 0.86fr) minmax(420px, 1.14fr);
@@ -1031,6 +1230,37 @@ input[type="range"] {
   .side-panel,
   .input-panel,
   .output-panel {
+    padding: 14px;
+  }
+
+  .help-dialog {
+    width: min(100% - 20px, 1080px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .help-window {
+    max-height: calc(100vh - 20px);
+  }
+
+  .help-body {
+    grid-template-columns: 1fr;
+  }
+
+  .help-nav {
+    display: flex;
+    gap: 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    padding: 12px;
+  }
+
+  .help-nav a {
+    white-space: nowrap;
+  }
+
+  .help-header,
+  .help-footer {
     padding: 14px;
   }
 

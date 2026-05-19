@@ -31,6 +31,7 @@
           <span class="pulse" aria-hidden="true"></span>
           <span id="modeStatus">自动识别</span>
         </div>
+        <button class="ghost-button help-top-button" id="openHelpTop" type="button">帮助</button>
         <button class="icon-button" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">
           <span class="theme-glyph" aria-hidden="true"></span>
         </button>
@@ -43,27 +44,11 @@
           <div class="section-heading">
             <div>
               <span class="eyebrow">GUIDE</span>
-              <h2 id="guideTitle">使用说明</h2>
+              <h2 id="guideTitle">说明与帮助</h2>
             </div>
           </div>
-          <div class="guide-steps">
-            <div class="guide-step">
-              <b>1</b>
-              <p>输入你的需求，或从模板中心选择一个场景。</p>
-            </div>
-            <div class="guide-step">
-              <b>2</b>
-              <p>如果需求不够清楚，先回答“追问模式”里的问题。</p>
-            </div>
-            <div class="guide-step">
-              <b>3</b>
-              <p>生成后查看“完整提示词”或“版本对比”，再复制、收藏、导出或分享。</p>
-            </div>
-          </div>
-          <div class="guide-note">
-            <strong>建议：</strong>
-            第一次使用可以先点一个模板。AI 增强和云端同步属于高级功能，没有后端地址也不影响基础使用。
-          </div>
+          <p class="guide-summary">第一次使用建议先阅读完整帮助，了解主流程、各个按钮和高级功能的区别。</p>
+          <button class="primary-button guide-open-button" id="openHelpGuide" type="button">打开详细使用帮助</button>
         </section>
 
         <section class="tool-section">
@@ -337,5 +322,133 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="help-dialog" id="helpDialog" aria-labelledby="helpTitle">
+    <div class="help-window">
+      <header class="help-header">
+        <div>
+          <span class="eyebrow">HELP CENTER</span>
+          <h2 id="helpTitle">PromptLens 详细使用帮助</h2>
+        </div>
+        <button class="icon-button" id="closeHelp" type="button" aria-label="关闭帮助" title="关闭帮助">
+          <span class="close-glyph" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <div class="help-body">
+        <nav class="help-nav" aria-label="帮助目录">
+          <a href="#help-quick">快速上手</a>
+          <a href="#help-input">输入区</a>
+          <a href="#help-questions">追问模式</a>
+          <a href="#help-templates">模板中心</a>
+          <a href="#help-output">结果区</a>
+          <a href="#help-save">保存与分享</a>
+          <a href="#help-ai">AI 与同步</a>
+          <a href="#help-faq">常见问题</a>
+        </nav>
+
+        <div class="help-content">
+          <section id="help-quick" class="help-card">
+            <h3>快速上手</h3>
+            <ol>
+              <li>在“需求工作台”输入你想让 AI 做的事，可以是问题、开发需求、图片描述、文案任务或分析任务。</li>
+              <li>点击“生成精准提示词”。右侧会生成完整提示词、版本对比、结构拆解和评分。</li>
+              <li>如果你不知道怎么写，可以先从左侧“模板中心”选择模板，再把模板内容改成自己的需求。</li>
+              <li>生成后优先查看“完整提示词”。如果太长或太短，再切到“版本对比”选择合适版本。</li>
+            </ol>
+          </section>
+
+          <section id="help-input" class="help-card">
+            <h3>输入区怎么用</h3>
+            <p>输入越具体，生成的提示词越精准。建议至少写清楚：目标、对象、场景、期望输出、限制条件。</p>
+            <div class="help-example">
+              <b>不够清楚：</b>
+              <p>帮我做一个网站。</p>
+              <b>更好：</b>
+              <p>帮我创建一个咖啡店会员管理网站，需要会员档案、消费记录、优惠券、数据看板，界面要高级，适合电脑和手机使用。</p>
+            </div>
+            <p>“生成提示词”适合从零开始整理需求；“改写提示词”适合你已经有一段提示词，但觉得它太粗糙、太短或不够专业。</p>
+          </section>
+
+          <section id="help-questions" class="help-card">
+            <h3>追问模式</h3>
+            <p>当需求比较模糊时，先回答追问问题。系统会把你的回答合并到原需求里，再生成更完整的提示词。</p>
+            <ul>
+              <li>不是每一题都必须填，只填你知道的部分即可。</li>
+              <li>开发类任务重点补充页面、技术栈、数据和运行方式。</li>
+              <li>图片类任务重点补充主体、风格、构图、光线和画幅。</li>
+              <li>分析类任务重点补充时间范围、指标、数据来源和决策目标。</li>
+            </ul>
+          </section>
+
+          <section id="help-templates" class="help-card">
+            <h3>模板中心</h3>
+            <p>模板适合不知道如何开始的用户。点击模板后，系统会自动填入示例需求，并切换到对应场景。</p>
+            <ul>
+              <li>搜索框可以搜“网站”“图片”“文案”“分析”“简历”等关键词。</li>
+              <li>分类按钮可以快速筛选开发、图片、写作、商业和个人场景。</li>
+              <li>模板只是起点，最好根据自己的业务或目标继续修改。</li>
+            </ul>
+          </section>
+
+          <section id="help-output" class="help-card">
+            <h3>结果区怎么看</h3>
+            <ul>
+              <li><strong>完整提示词：</strong>最推荐复制给 AI 使用的主版本。</li>
+              <li><strong>版本对比：</strong>提供简洁版、专业版、超详细版、可直接复制版，适合不同复杂度。</li>
+              <li><strong>结构拆解：</strong>告诉你这条提示词由哪些部分组成，方便继续修改。</li>
+              <li><strong>图片参数：</strong>当场景是图片生成时，会给出正向提示词、负面提示词和画幅建议。</li>
+              <li><strong>评分：</strong>用于判断需求是否足够清楚，分数低时建议补充上下文和约束。</li>
+            </ul>
+          </section>
+
+          <section id="help-save" class="help-card">
+            <h3>保存、收藏、导出和分享</h3>
+            <ul>
+              <li><strong>保存历史：</strong>把当前结果保存到浏览器本地历史。</li>
+              <li><strong>收藏：</strong>把常用提示词放进收藏列表，方便以后再次打开。</li>
+              <li><strong>导出 TXT / MD：</strong>把提示词保存成文本或 Markdown 文件。</li>
+              <li><strong>分享链接：</strong>生成一个包含当前输入和设置的链接，别人打开后可以继续编辑。</li>
+            </ul>
+            <p>历史和收藏默认保存在当前浏览器里，换电脑或清理浏览器数据后可能会丢失。</p>
+          </section>
+
+          <section id="help-ai" class="help-card">
+            <h3>AI 增强与云端同步</h3>
+            <p>基础功能不需要后端地址，打开网页就能用。AI 增强和云端同步属于高级功能，需要你自己配置后端接口。</p>
+            <ul>
+              <li><strong>AI 增强：</strong>填写后端地址后，系统会把需求和设置发送给后端，让真正的 AI 进一步优化结果。</li>
+              <li><strong>云端同步：</strong>填写同步端点后，可以把历史和收藏发送到你的服务端。</li>
+              <li><strong>重要：</strong>不要把 OpenAI、DeepSeek 或其他模型 API Key 直接写在网页前端代码里。</li>
+            </ul>
+          </section>
+
+          <section id="help-faq" class="help-card">
+            <h3>常见问题</h3>
+            <details open>
+              <summary>为什么没有填 AI 后端也能生成？</summary>
+              <p>因为网站内置了本地规则引擎，可以离线生成结构化提示词。AI 后端只是增强效果，不是基础使用的必要条件。</p>
+            </details>
+            <details>
+              <summary>提示词太长怎么办？</summary>
+              <p>切到“版本对比”，选择简洁版；也可以把“细节密度”调低。</p>
+            </details>
+            <details>
+              <summary>我应该选哪个场景？</summary>
+              <p>不确定时保持“自动”。如果识别不准，再手动选择问答、开发、图片、写作或分析。</p>
+            </details>
+            <details>
+              <summary>如何得到更好的图片提示词？</summary>
+              <p>写清楚主体、背景、镜头、光线、材质、颜色、风格和画幅。不要只写“生成一张好看的图片”。</p>
+            </details>
+          </section>
+        </div>
+      </div>
+
+      <footer class="help-footer">
+        <button class="secondary-button" id="closeHelpFooter" type="button">我知道了</button>
+      </footer>
+    </div>
+  </dialog>
 </body>
 </html>
