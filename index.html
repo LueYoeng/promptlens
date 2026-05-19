@@ -20,6 +20,12 @@
         </div>
       </div>
 
+      <div class="top-metrics" aria-label="使用数据">
+        <div class="metric-pill"><b id="statGenerated">0</b><span>生成</span></div>
+        <div class="metric-pill"><b id="statFavorites">0</b><span>收藏</span></div>
+        <div class="metric-pill"><b id="statTemplates">0</b><span>模板</span></div>
+      </div>
+
       <div class="topbar-actions">
         <div class="status-pill">
           <span class="pulse" aria-hidden="true"></span>
@@ -31,18 +37,95 @@
       </div>
     </header>
 
-    <main class="workspace">
+    <main class="product-grid">
+      <aside class="side-panel">
+        <section class="tool-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">TEMPLATES</span>
+              <h2>模板中心</h2>
+            </div>
+          </div>
+          <input class="search-input" id="templateSearch" type="search" placeholder="搜索网站、图片、文案、分析...">
+          <div class="chip-row" id="categoryFilters" aria-label="模板分类"></div>
+          <div class="template-list" id="templateList"></div>
+        </section>
+
+        <section class="tool-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">ACCOUNT</span>
+              <h2>工作区</h2>
+            </div>
+          </div>
+          <div class="compact-fields">
+            <label>
+              <span>用户名称</span>
+              <input id="workspaceName" type="text" placeholder="你的名字或团队名">
+            </label>
+            <label>
+              <span>云端同步端点</span>
+              <input id="syncEndpoint" type="url" placeholder="https://your-api.example.com/sync">
+            </label>
+          </div>
+          <div class="mini-actions">
+            <button class="ghost-button" id="saveWorkspace" type="button">保存账户</button>
+            <button class="ghost-button" id="syncHistory" type="button">同步历史</button>
+          </div>
+          <p class="state-line" id="syncStatus">本地历史已启用</p>
+        </section>
+
+        <section class="tool-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">AI ENGINE</span>
+              <h2>AI 接入</h2>
+            </div>
+          </div>
+          <label class="switch-row full">
+            <input type="checkbox" id="enableAI">
+            <span></span>
+            <b>启用 AI 增强</b>
+          </label>
+          <div class="compact-fields">
+            <label>
+              <span>后端地址</span>
+              <input id="aiEndpoint" type="url" placeholder="https://your-api.example.com/optimize">
+            </label>
+            <label>
+              <span>模型标签</span>
+              <select id="aiModel">
+                <option value="auto">自动</option>
+                <option value="fast">快速</option>
+                <option value="pro">专业</option>
+                <option value="creative">创意</option>
+              </select>
+            </label>
+          </div>
+          <div class="mini-actions">
+            <button class="ghost-button" id="saveAIConfig" type="button">保存配置</button>
+            <button class="ghost-button" id="testAI" type="button">测试连接</button>
+          </div>
+          <p class="state-line" id="aiStatus">本地规则引擎</p>
+        </section>
+      </aside>
+
       <section class="input-panel" aria-labelledby="inputTitle">
         <div class="panel-heading">
           <div>
             <span class="eyebrow">INPUT</span>
-            <h2 id="inputTitle">原始需求</h2>
+            <h2 id="inputTitle">需求工作台</h2>
           </div>
           <button class="ghost-button" id="clearInput" type="button">清空</button>
         </div>
 
+        <div class="segmented two" id="toolModeButtons" aria-label="工作模式">
+          <button class="seg-button active" type="button" data-tool-mode="create">生成提示词</button>
+          <button class="seg-button" type="button" data-tool-mode="rewrite">改写提示词</button>
+        </div>
+
         <div class="textarea-shell">
-          <textarea id="userInput" placeholder="例如：帮我创建一个用于管理健身会员的网站系统，需要有会员档案、课程预约和数据看板。"></textarea>
+          <textarea id="userInput" placeholder="例如：帮我创建一个用于管理健身会员的网站系统，需要会员档案、课程预约和数据看板。"></textarea>
           <div class="textarea-footer">
             <span id="charCount">0</span>
             <span>字符</span>
@@ -55,6 +138,18 @@
           <button type="button" data-example="生成一张未来城市屋顶咖啡馆的图片，雨后夜景，赛博但温暖，适合做网页首屏。">图片</button>
           <button type="button" data-example="分析一家线上课程平台最近三个月付费转化率下降的可能原因，并给出排查框架。">分析</button>
         </div>
+
+        <section class="clarify-box">
+          <div class="section-heading inline">
+            <div>
+              <span class="eyebrow">QUESTIONS</span>
+              <h3>追问模式</h3>
+            </div>
+            <button class="ghost-button" id="refreshQuestions" type="button">刷新</button>
+          </div>
+          <div class="clarification-list" id="clarificationList"></div>
+          <button class="secondary-button wide" id="applyClarifications" type="button">应用补充信息</button>
+        </section>
 
         <div class="control-block">
           <label class="control-label">场景</label>
@@ -145,7 +240,7 @@
             <span class="button-symbol" aria-hidden="true"></span>
             生成精准提示词
           </button>
-          <button class="secondary-button" id="copyPrompt" type="button">复制结果</button>
+          <button class="secondary-button" id="aiEnhanceBtn" type="button">AI 增强</button>
         </div>
       </section>
 
@@ -167,8 +262,16 @@
             <div><i id="barClarity"></i></div>
           </div>
           <div class="quality-item">
+            <span>上下文</span>
+            <div><i id="barContext"></i></div>
+          </div>
+          <div class="quality-item">
             <span>约束</span>
             <div><i id="barConstraint"></i></div>
+          </div>
+          <div class="quality-item">
+            <span>格式</span>
+            <div><i id="barFormat"></i></div>
           </div>
           <div class="quality-item">
             <span>可执行</span>
@@ -178,21 +281,29 @@
 
         <div class="tabs" role="tablist" aria-label="结果视图">
           <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整提示词</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="versions">版本对比</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">结构拆解</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="image">图片参数</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="history">历史</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="favorites">收藏</button>
         </div>
 
         <div class="result-area">
           <pre id="resultPrompt" class="result-view active" data-panel="prompt"></pre>
+          <div id="variantList" class="variant-list result-view" data-panel="versions"></div>
           <pre id="resultBlueprint" class="result-view" data-panel="blueprint"></pre>
           <pre id="resultImage" class="result-view" data-panel="image"></pre>
           <div id="historyList" class="history-list result-view" data-panel="history"></div>
+          <div id="favoriteList" class="history-list result-view" data-panel="favorites"></div>
         </div>
 
         <div class="output-actions">
-          <button class="ghost-button" id="copyBlueprint" type="button">复制结构</button>
+          <button class="ghost-button" id="favoritePrompt" type="button">收藏</button>
           <button class="ghost-button" id="saveHistory" type="button">保存历史</button>
+          <button class="ghost-button" id="sharePrompt" type="button">分享链接</button>
+          <button class="ghost-button" id="exportTxt" type="button">导出 TXT</button>
+          <button class="ghost-button" id="exportMd" type="button">导出 MD</button>
+          <button class="ghost-button" id="copyPrompt" type="button">复制结果</button>
         </div>
       </section>
     </main>

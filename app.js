@@ -2,9 +2,34 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const elements = {
+  canvas: $("#ambientCanvas"),
+  themeToggle: $("#themeToggle"),
+  modeStatus: $("#modeStatus"),
+  statGenerated: $("#statGenerated"),
+  statFavorites: $("#statFavorites"),
+  statTemplates: $("#statTemplates"),
+  templateSearch: $("#templateSearch"),
+  categoryFilters: $("#categoryFilters"),
+  templateList: $("#templateList"),
+  workspaceName: $("#workspaceName"),
+  syncEndpoint: $("#syncEndpoint"),
+  saveWorkspace: $("#saveWorkspace"),
+  syncHistory: $("#syncHistory"),
+  syncStatus: $("#syncStatus"),
+  enableAI: $("#enableAI"),
+  aiEndpoint: $("#aiEndpoint"),
+  aiModel: $("#aiModel"),
+  saveAIConfig: $("#saveAIConfig"),
+  testAI: $("#testAI"),
+  aiStatus: $("#aiStatus"),
+  toolModeButtons: $("#toolModeButtons"),
+  inputTitle: $("#inputTitle"),
   userInput: $("#userInput"),
   charCount: $("#charCount"),
-  modeStatus: $("#modeStatus"),
+  clearInput: $("#clearInput"),
+  refreshQuestions: $("#refreshQuestions"),
+  clarificationList: $("#clarificationList"),
+  applyClarifications: $("#applyClarifications"),
   modeButtons: $("#modeButtons"),
   targetAI: $("#targetAI"),
   language: $("#language"),
@@ -17,21 +42,34 @@ const elements = {
   includeFormat: $("#includeFormat"),
   includeChecklist: $("#includeChecklist"),
   generateBtn: $("#generateBtn"),
-  clearInput: $("#clearInput"),
-  copyPrompt: $("#copyPrompt"),
-  copyBlueprint: $("#copyBlueprint"),
-  saveHistory: $("#saveHistory"),
+  aiEnhanceBtn: $("#aiEnhanceBtn"),
+  scoreValue: $("#scoreValue"),
+  barClarity: $("#barClarity"),
+  barContext: $("#barContext"),
+  barConstraint: $("#barConstraint"),
+  barFormat: $("#barFormat"),
+  barAction: $("#barAction"),
   resultPrompt: $("#resultPrompt"),
+  variantList: $("#variantList"),
   resultBlueprint: $("#resultBlueprint"),
   resultImage: $("#resultImage"),
   historyList: $("#historyList"),
-  scoreValue: $("#scoreValue"),
-  barClarity: $("#barClarity"),
-  barConstraint: $("#barConstraint"),
-  barAction: $("#barAction"),
-  themeToggle: $("#themeToggle"),
-  toast: $("#toast"),
-  canvas: $("#ambientCanvas")
+  favoriteList: $("#favoriteList"),
+  favoritePrompt: $("#favoritePrompt"),
+  saveHistory: $("#saveHistory"),
+  sharePrompt: $("#sharePrompt"),
+  exportTxt: $("#exportTxt"),
+  exportMd: $("#exportMd"),
+  copyPrompt: $("#copyPrompt"),
+  toast: $("#toast")
+};
+
+const store = {
+  history: "promptLensHistory",
+  favorites: "promptLensFavorites",
+  settings: "promptLensSettings",
+  stats: "promptLensStats",
+  theme: "promptLensTheme"
 };
 
 const detailLabels = ["极简", "简洁", "标准", "精细", "专家级"];
@@ -77,39 +115,181 @@ const profiles = {
   }
 };
 
-let selectedMode = "auto";
-let currentResult = {
-  prompt: "",
-  blueprint: "",
-  image: "",
-  mode: "auto",
-  score: 0
+const templates = [
+  {
+    id: "saas-dashboard",
+    title: "网站系统开发",
+    category: "开发",
+    mode: "code",
+    targetAI: "code",
+    tone: "professional",
+    format: "structured",
+    prompt: "创建一个面向中小企业的 SaaS 数据看板网站，需要登录、角色权限、指标卡片、趋势图、筛选器、导出报表和移动端适配，UI 要克制高级。"
+  },
+  {
+    id: "image-hero",
+    title: "网页首屏图片",
+    category: "图片",
+    mode: "image",
+    targetAI: "image",
+    tone: "creative",
+    format: "structured",
+    prompt: "生成一张适合科技产品官网首屏的视觉图片，主体是透明玻璃质感的 AI 工作台，清晨自然光，干净高级，画面可留出标题空间。"
+  },
+  {
+    id: "xhs-post",
+    title: "小红书文案",
+    category: "写作",
+    mode: "writing",
+    targetAI: "chat",
+    tone: "friendly",
+    format: "steps",
+    prompt: "帮我写一篇小红书笔记，主题是普通人如何开始使用 AI 提升工作效率，要有标题、开头钩子、正文结构和结尾互动。"
+  },
+  {
+    id: "business-diagnosis",
+    title: "业务诊断",
+    category: "分析",
+    mode: "analysis",
+    targetAI: "chat",
+    tone: "strict",
+    format: "table",
+    prompt: "分析一个线上课程平台近三个月付费转化率下降的可能原因，给出指标拆解、排查路径、数据需求和优先级行动建议。"
+  },
+  {
+    id: "paper-outline",
+    title: "论文报告",
+    category: "写作",
+    mode: "writing",
+    targetAI: "chat",
+    tone: "strict",
+    format: "structured",
+    prompt: "围绕人工智能对现代教育评价体系的影响，生成一份论文大纲，需要研究问题、文献方向、章节结构和论证重点。"
+  },
+  {
+    id: "video-script",
+    title: "视频脚本",
+    category: "写作",
+    mode: "writing",
+    targetAI: "chat",
+    tone: "creative",
+    format: "steps",
+    prompt: "写一个 60 秒短视频脚本，主题是 AI 工具如何帮自由职业者节省时间，需要分镜、台词、画面和节奏建议。"
+  },
+  {
+    id: "resume-upgrade",
+    title: "简历优化",
+    category: "个人",
+    mode: "writing",
+    targetAI: "chat",
+    tone: "professional",
+    format: "structured",
+    prompt: "帮我优化一段产品经理简历经历，突出数据结果、项目复杂度、跨团队协作和业务影响，避免空泛词。"
+  },
+  {
+    id: "translation-polish",
+    title: "翻译润色",
+    category: "写作",
+    mode: "writing",
+    targetAI: "chat",
+    tone: "professional",
+    format: "table",
+    prompt: "把一段中文商业介绍翻译成自然地道的英文，并给出直译版、商务版和更适合官网展示的润色版。"
+  },
+  {
+    id: "product-research",
+    title: "产品调研",
+    category: "商业",
+    mode: "analysis",
+    targetAI: "chat",
+    tone: "strict",
+    format: "table",
+    prompt: "调研一款 AI 提示词优化工具的目标用户、核心场景、竞品功能、商业模式和 MVP 优先级。"
+  },
+  {
+    id: "prompt-rewrite",
+    title: "提示词改写",
+    category: "个人",
+    mode: "qa",
+    targetAI: "chat",
+    tone: "professional",
+    format: "structured",
+    toolMode: "rewrite",
+    prompt: "你是AI，请帮我写一篇关于效率的文章。"
+  }
+];
+
+let state = {
+  selectedMode: "auto",
+  selectedCategory: "全部",
+  toolMode: "create",
+  currentResult: emptyResult(),
+  activeTab: "prompt"
 };
+
+function emptyResult() {
+  return {
+    prompt: "",
+    blueprint: "",
+    image: "",
+    variants: [],
+    mode: "auto",
+    score: 0,
+    metrics: { clarity: 0, context: 0, constraint: 0, format: 0, action: 0 }
+  };
+}
 
 function normalizeText(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function readJSON(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function writeJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
 function detectMode(text) {
   const value = text.toLowerCase();
   const checks = [
-    { mode: "image", score: /(生成图片|画一张|画一个|插画|海报|头像|logo|视觉|封面|摄影|镜头|光线|图片|midjourney|stable diffusion|image|photo|poster)/i.test(value) },
-    { mode: "code", score: /(创建|开发|搭建|实现|写一个|做一个|网站|系统|程序|应用|小程序|app|页面|组件|前端|后端|接口|数据库|代码|bug|修复|部署|测试)/i.test(value) },
-    { mode: "analysis", score: /(分析|诊断|原因|指标|数据|增长|转化率|留存|收入|成本|复盘|策略|决策|竞品|市场|归因)/i.test(value) },
-    { mode: "writing", score: /(写|改写|润色|文案|标题|脚本|邮件|简历|总结|报告|公众号|小红书|演讲稿|文章|故事)/i.test(value) },
-    { mode: "qa", score: /(为什么|如何|怎么|是否|什么是|请问|解释|区别|原理|\?|\？)/i.test(value) }
+    { mode: "image", hit: /(生成图片|画一张|画一个|插画|海报|头像|logo|视觉|封面|摄影|镜头|光线|图片|midjourney|stable diffusion|image|photo|poster)/i.test(value) },
+    { mode: "code", hit: /(创建|开发|搭建|实现|写一个|做一个|网站|系统|程序|应用|小程序|app|页面|组件|前端|后端|接口|数据库|代码|bug|修复|部署|测试)/i.test(value) },
+    { mode: "analysis", hit: /(分析|诊断|原因|指标|数据|增长|转化率|留存|收入|成本|复盘|策略|决策|竞品|市场|归因)/i.test(value) },
+    { mode: "writing", hit: /(写|改写|润色|文案|标题|脚本|邮件|简历|总结|报告|公众号|小红书|演讲稿|文章|故事|翻译)/i.test(value) },
+    { mode: "qa", hit: /(为什么|如何|怎么|是否|什么是|请问|解释|区别|原理|\?|\？)/i.test(value) }
   ];
-  const found = checks.find((item) => item.score);
+  const found = checks.find((item) => item.hit);
   return found ? found.mode : "qa";
 }
 
 function getActiveMode(text) {
-  if (selectedMode !== "auto") return selectedMode;
+  if (state.selectedMode !== "auto") return state.selectedMode;
   return text ? detectMode(text) : "auto";
 }
 
+function collectOptions() {
+  return {
+    targetAI: elements.targetAI.value,
+    language: elements.language.value,
+    tone: elements.tone.value,
+    format: elements.format.value,
+    detail: Number(elements.detailRange.value),
+    includeRole: elements.includeRole.checked,
+    includeConstraints: elements.includeConstraints.checked,
+    includeFormat: elements.includeFormat.checked,
+    includeChecklist: elements.includeChecklist.checked,
+    toolMode: state.toolMode
+  };
+}
+
 function getLanguageInstruction(language) {
-  if (language === "en") return "Please answer in English. Keep proper nouns and technical terms precise.";
+  if (language === "en") return "Please answer in English. Keep terminology precise and avoid vague wording.";
   if (language === "bilingual") return "请使用中英双语输出：中文负责解释，英文保留关键术语和可直接复制的专业表达。";
   return "请使用简体中文输出，必要的专业术语可以保留英文。";
 }
@@ -200,44 +380,35 @@ function buildOutputFormat(format, mode) {
     getFormatInstruction(format),
     `必须包含：${profile.deliverable}。`
   ];
-  if (format === "table") {
-    parts.push("表格字段需要有明确列名，避免只给泛泛描述。");
-  }
-  if (format === "steps") {
-    parts.push("每个步骤都要写清楚输入、动作和预期输出。");
-  }
+  if (format === "table") parts.push("表格字段需要有明确列名，避免只给泛泛描述。");
+  if (format === "steps") parts.push("每个步骤都要写清楚输入、动作和预期输出。");
   return parts.join("\n");
 }
 
 function buildPrompt(text, options) {
   const mode = getActiveMode(text);
-  if (!text) {
-    return {
-      mode,
-      prompt: "",
-      blueprint: "",
-      image: "",
-      score: 0,
-      metrics: { clarity: 0, constraint: 0, action: 0 }
-    };
-  }
+  if (!text) return emptyResult();
 
   const profile = profiles[mode] || profiles.qa;
-  const detail = Number(options.detail);
   const sections = [];
+  const sourceLabel = options.toolMode === "rewrite" ? "待改写提示词" : "原始需求";
 
   if (options.includeRole) {
     sections.push(`## 角色\n${profile.role}`);
   }
 
-  sections.push(`## 原始需求\n${text}`);
-  sections.push(`## 目标\n${profile.goal}`);
+  if (options.toolMode === "rewrite") {
+    sections.push("## 任务\n请把下面这段提示词升级为更精准、上下文更完整、输出标准更明确的版本。不要直接回答原提示词中的任务。");
+  }
+
+  sections.push(`## ${sourceLabel}\n${text}`);
+  sections.push(`## 目标\n${options.toolMode === "rewrite" ? "优化提示词本身，让它更适合交给 AI 使用。" : profile.goal}`);
   sections.push(`## 适配对象\n${getTargetInstruction(options.targetAI)}`);
   sections.push(`## 语言与语气\n${getLanguageInstruction(options.language)}\n${getToneInstruction(options.tone)}`);
 
   if (options.includeConstraints) {
-    sections.push(`## 执行要求\n${buildModeRequirements(mode, detail)}`);
-    sections.push(`## 细节密度\n${detailInstruction(detail)}`);
+    sections.push(`## 执行要求\n${buildModeRequirements(mode, options.detail)}`);
+    sections.push(`## 细节密度\n${detailInstruction(options.detail)}`);
   }
 
   if (options.includeFormat) {
@@ -248,40 +419,48 @@ function buildPrompt(text, options) {
     sections.push(`## 自检清单\n在最终回答前检查：\n${buildChecklist(mode)}`);
   }
 
-  if (detail >= 4) {
+  if (options.detail >= 4) {
     sections.push("## 信息不足时的处理\n如果缺少关键上下文，请先列出最多 5 个澄清问题；若用户希望你直接继续，请明确写出你的合理假设再执行。");
   }
 
   const prompt = sections.join("\n\n");
-  const blueprint = buildBlueprint(text, mode, options);
-  const image = buildImagePanel(text, mode, options);
   const metrics = calculateMetrics(text, options, mode);
-  const score = Math.round((metrics.clarity + metrics.constraint + metrics.action) / 3);
-
-  return { mode, prompt, blueprint, image, score, metrics };
+  const score = Math.round(Object.values(metrics).reduce((sum, value) => sum + value, 0) / 5);
+  return {
+    mode,
+    prompt,
+    blueprint: buildBlueprint(text, mode, options),
+    image: buildImagePanel(text, mode, options),
+    variants: buildVariants(text, mode, options),
+    score,
+    metrics
+  };
 }
 
 function buildBlueprint(text, mode, options) {
   const profile = profiles[mode] || profiles.qa;
-  const detail = Number(options.detail);
-  const riskLine = detail >= 4
+  const riskLine = options.detail >= 4
     ? "需要识别缺失信息、边界条件、质量标准和可能误解。"
     : "需要避免偏离原始需求。";
 
   return [
     `场景：${modeNames[mode] || modeNames.qa}`,
-    `核心意图：把“${shorten(text, 68)}”转成更清晰、可执行的 AI 指令。`,
+    `核心意图：把“${shorten(text, 76)}”转成更清晰、可执行的 AI 指令。`,
     `推荐角色：${profile.role}`,
     "",
     "关键槽位：",
     `- 任务目标：${profile.goal}`,
     `- 输出要求：${profile.deliverable}`,
+    `- 目标 AI：${getTargetInstruction(options.targetAI)}`,
     `- 语气：${getToneInstruction(options.tone)}`,
     `- 语言：${getLanguageInstruction(options.language)}`,
     `- 格式：${getFormatInstruction(options.format)}`,
     "",
     "约束重点：",
-    buildModeRequirements(mode, detail),
+    buildModeRequirements(mode, options.detail),
+    "",
+    "改进建议：",
+    buildImprovementTips(text, options, mode).map((item) => `- ${item}`).join("\n"),
     "",
     `风险提醒：${riskLine}`
   ].join("\n");
@@ -292,7 +471,7 @@ function buildImagePanel(text, mode, options) {
     return [
       "当前场景不是图片生成。",
       "",
-      "如果要把这条需求改造成图片提示词，可以切换到“图片”场景，再补充：主体、场景、风格、构图、镜头、光线、画幅比例。"
+      "切换到“图片”场景后，可以补充：主体、场景、风格、构图、镜头、光线、画幅比例。"
     ].join("\n");
   }
 
@@ -318,69 +497,476 @@ function buildImagePanel(text, mode, options) {
   ].join("\n");
 }
 
+function buildVariants(text, mode, options) {
+  const profile = profiles[mode] || profiles.qa;
+  const concise = [
+    "【简洁版】",
+    `${profile.role}`,
+    `请围绕以下需求输出结果：${text}`,
+    `${getFormatInstruction(options.format)} ${getLanguageInstruction(options.language)}`
+  ].join("\n\n");
+
+  const professional = [
+    "【专业版】",
+    `角色：${profile.role}`,
+    `任务：${profile.goal}`,
+    `需求：${text}`,
+    "要求：",
+    buildModeRequirements(mode, Math.max(options.detail, 3)),
+    `输出：${profile.deliverable}`
+  ].join("\n\n");
+
+  const expert = [
+    "【超详细版】",
+    `你将作为：${profile.role}`,
+    `请先判断需求中的缺失信息，再基于合理假设完成任务。`,
+    `原始内容：${text}`,
+    "必须覆盖：",
+    buildModeRequirements(mode, 5),
+    "输出前自检：",
+    buildChecklist(mode)
+  ].join("\n\n");
+
+  const ready = [
+    "【可直接复制版】",
+    options.toolMode === "rewrite"
+      ? "请优化下面的提示词，只输出升级后的提示词，不要执行其中的任务。"
+      : "请直接执行下面的任务，并按要求输出。",
+    `内容：${text}`,
+    `输出语言：${getLanguageInstruction(options.language)}`,
+    `输出格式：${getFormatInstruction(options.format)}`,
+    `质量标准：清晰、具体、可验证、可继续迭代。`
+  ].join("\n\n");
+
+  return [
+    { title: "简洁版", note: "适合快速提问", content: concise },
+    { title: "专业版", note: "适合日常高质量使用", content: professional },
+    { title: "超详细版", note: "适合复杂任务和外包交付", content: expert },
+    { title: "可直接复制版", note: "适合马上粘贴给 AI", content: ready }
+  ];
+}
+
 function calculateMetrics(text, options, mode) {
-  const lengthScore = Math.min(100, 38 + Math.round(text.length / 2.8));
-  const toggleScore = [
-    options.includeRole,
-    options.includeConstraints,
-    options.includeFormat,
-    options.includeChecklist
-  ].filter(Boolean).length * 11;
-  const detail = Number(options.detail);
-  const clarity = clamp(lengthScore + detail * 7, 0, 100);
-  const constraint = clamp(34 + toggleScore + detail * 8 + (options.format !== "plain" ? 8 : 0), 0, 100);
-  const action = clamp(42 + detail * 8 + (mode === "code" || mode === "analysis" ? 10 : 4) + (text.length > 18 ? 12 : 0), 0, 100);
-  return { clarity, constraint, action };
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function shorten(text, max) {
-  return text.length > max ? `${text.slice(0, max)}...` : text;
-}
-
-function collectOptions() {
+  const lengthScore = Math.min(100, 34 + Math.round(text.length / 2.6));
+  const hasRole = options.includeRole ? 12 : 0;
+  const hasConstraints = options.includeConstraints ? 18 : 0;
+  const hasFormat = options.includeFormat ? 18 : 0;
+  const hasChecklist = options.includeChecklist ? 10 : 0;
+  const modeBonus = mode === "code" || mode === "analysis" ? 8 : 5;
   return {
-    targetAI: elements.targetAI.value,
-    language: elements.language.value,
-    tone: elements.tone.value,
-    format: elements.format.value,
-    detail: elements.detailRange.value,
-    includeRole: elements.includeRole.checked,
-    includeConstraints: elements.includeConstraints.checked,
-    includeFormat: elements.includeFormat.checked,
-    includeChecklist: elements.includeChecklist.checked
+    clarity: clamp(lengthScore + options.detail * 6, 0, 100),
+    context: clamp(34 + hasRole + options.detail * 10 + (text.length > 36 ? 16 : 0), 0, 100),
+    constraint: clamp(34 + hasConstraints + options.detail * 9 + hasChecklist, 0, 100),
+    format: clamp(38 + hasFormat + (options.format !== "plain" ? 18 : 6) + options.detail * 6, 0, 100),
+    action: clamp(40 + modeBonus + options.detail * 8 + (text.length > 18 ? 14 : 0), 0, 100)
   };
 }
 
+function buildImprovementTips(text, options, mode) {
+  const tips = [];
+  if (text.length < 28) tips.push("补充目标用户、使用场景和成功标准");
+  if (!/[0-9一二三四五六七八九十]/.test(text)) tips.push("加入数量、时间、篇幅、尺寸或验收指标");
+  if (mode === "code") tips.push("明确技术栈、页面清单、数据结构和部署方式");
+  if (mode === "image") tips.push("明确主体、构图、镜头、光线、材质和画幅");
+  if (mode === "analysis") tips.push("明确指标口径、时间范围、数据来源和决策目标");
+  if (options.format === "plain") tips.push("复杂任务建议改为结构化或步骤清单");
+  return tips.length ? tips : ["当前需求已经具备较好的结构，可以继续增加反例或验收标准"];
+}
+
+function generateClarifyingQuestions(text, mode) {
+  const base = [
+    "这个结果主要给谁使用？",
+    "你希望输出最终长什么样？",
+    "有没有必须避免的内容或限制？"
+  ];
+  const byMode = {
+    code: ["需要哪些页面或模块？", "有没有指定技术栈或部署平台？"],
+    image: ["画面主体是什么？", "希望什么风格、镜头和画幅？"],
+    writing: ["目标读者是谁？", "发布渠道和篇幅要求是什么？"],
+    analysis: ["要分析的时间范围和核心指标是什么？", "你已有的数据有哪些？"],
+    qa: ["你更想要结论、原因还是行动方案？", "需要多深入的解释？"]
+  };
+  const questions = [...base, ...(byMode[mode] || byMode.qa)];
+  return questions.slice(0, text.length < 40 ? 5 : 4);
+}
+
+function renderClarifications() {
+  const text = normalizeText(elements.userInput.value);
+  const mode = getActiveMode(text);
+  const questions = generateClarifyingQuestions(text, mode);
+  elements.clarificationList.innerHTML = questions.map((question, index) => `
+    <div class="clarify-item">
+      <label for="clarify-${index}">${escapeHtml(question)}</label>
+      <input id="clarify-${index}" type="text" data-question="${escapeHtml(question)}" placeholder="可选填写">
+    </div>
+  `).join("");
+}
+
+function applyClarifications() {
+  const answers = $$(".clarify-item input")
+    .map((input) => ({ question: input.dataset.question, answer: normalizeText(input.value) }))
+    .filter((item) => item.answer);
+
+  if (!answers.length) {
+    showToast("先填写至少一条补充信息");
+    return;
+  }
+
+  const addition = [
+    "",
+    "补充信息：",
+    ...answers.map((item) => `- ${item.question} ${item.answer}`)
+  ].join("\n");
+
+  elements.userInput.value = `${elements.userInput.value.trim()}${addition}`;
+  elements.charCount.textContent = elements.userInput.value.length;
+  renderClarifications();
+  generate({ count: false });
+  showToast("已应用补充信息");
+}
+
 function renderResult(result) {
-  currentResult = result;
+  state.currentResult = result;
   elements.resultPrompt.textContent = result.prompt;
   elements.resultBlueprint.textContent = result.blueprint;
   elements.resultImage.textContent = result.image;
   elements.scoreValue.textContent = result.score;
   elements.barClarity.style.width = `${result.metrics.clarity || 0}%`;
+  elements.barContext.style.width = `${result.metrics.context || 0}%`;
   elements.barConstraint.style.width = `${result.metrics.constraint || 0}%`;
+  elements.barFormat.style.width = `${result.metrics.format || 0}%`;
   elements.barAction.style.width = `${result.metrics.action || 0}%`;
   elements.modeStatus.textContent = modeNames[result.mode] || modeNames.auto;
+  renderVariants(result.variants);
 }
 
-function generate() {
+function renderVariants(variants) {
+  if (!variants.length) {
+    elements.variantList.innerHTML = `<div class="variant-card"><strong>等待输入</strong><span>生成后显示多个版本。</span></div>`;
+    return;
+  }
+
+  elements.variantList.innerHTML = variants.map((variant, index) => `
+    <button class="variant-card" type="button" data-variant-index="${index}">
+      <strong>${escapeHtml(variant.title)}</strong>
+      <span>${escapeHtml(variant.note)}</span>
+      <pre>${escapeHtml(variant.content)}</pre>
+    </button>
+  `).join("");
+}
+
+function generate(options = {}) {
   const text = normalizeText(elements.userInput.value);
   elements.charCount.textContent = elements.userInput.value.length;
   const result = buildPrompt(text, collectOptions());
   renderResult(result);
+  renderClarifications();
+  if (options.count && result.prompt) incrementGenerated();
   return result;
 }
 
+async function runAIEnhance() {
+  const text = normalizeText(elements.userInput.value);
+  const settings = getSettings();
+  if (!text) {
+    showToast("请输入需求");
+    return;
+  }
+  if (!settings.enableAI || !settings.aiEndpoint) {
+    showToast("请先启用 AI 并填写后端地址");
+    return;
+  }
+
+  elements.aiStatus.textContent = "AI 增强中";
+  elements.aiEnhanceBtn.disabled = true;
+  try {
+    const response = await fetch(settings.aiEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        input: text,
+        options: collectOptions(),
+        mode: getActiveMode(text),
+        model: settings.aiModel,
+        workspace: settings.workspaceName || ""
+      })
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const fallback = buildPrompt(text, collectOptions());
+    const result = {
+      ...fallback,
+      prompt: data.prompt || data.result || fallback.prompt,
+      blueprint: data.blueprint || fallback.blueprint,
+      image: data.image || fallback.image,
+      variants: Array.isArray(data.variants) ? data.variants : fallback.variants,
+      score: data.score || fallback.score
+    };
+    renderResult(result);
+    incrementGenerated();
+    elements.aiStatus.textContent = "AI 已增强";
+    showToast("AI 增强完成");
+  } catch (error) {
+    elements.aiStatus.textContent = "连接失败，已保留本地结果";
+    showToast("AI 后端暂不可用");
+  } finally {
+    elements.aiEnhanceBtn.disabled = false;
+  }
+}
+
 function setMode(mode) {
-  selectedMode = mode;
-  $$(".seg-button").forEach((button) => {
+  state.selectedMode = mode;
+  $$(".seg-button[data-mode]").forEach((button) => {
     button.classList.toggle("active", button.dataset.mode === mode);
   });
-  generate();
+  generate({ count: false });
+}
+
+function setToolMode(mode) {
+  state.toolMode = mode;
+  $$(".seg-button[data-tool-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.toolMode === mode);
+  });
+  elements.inputTitle.textContent = mode === "rewrite" ? "提示词改写器" : "需求工作台";
+  generate({ count: false });
+}
+
+function getSettings() {
+  return readJSON(store.settings, {
+    workspaceName: "",
+    syncEndpoint: "",
+    enableAI: false,
+    aiEndpoint: "",
+    aiModel: "auto"
+  });
+}
+
+function saveSettings(partial = {}) {
+  const next = {
+    ...getSettings(),
+    workspaceName: elements.workspaceName.value.trim(),
+    syncEndpoint: elements.syncEndpoint.value.trim(),
+    enableAI: elements.enableAI.checked,
+    aiEndpoint: elements.aiEndpoint.value.trim(),
+    aiModel: elements.aiModel.value,
+    ...partial
+  };
+  writeJSON(store.settings, next);
+  renderSettings();
+  return next;
+}
+
+function renderSettings() {
+  const settings = getSettings();
+  elements.workspaceName.value = settings.workspaceName || "";
+  elements.syncEndpoint.value = settings.syncEndpoint || "";
+  elements.enableAI.checked = Boolean(settings.enableAI);
+  elements.aiEndpoint.value = settings.aiEndpoint || "";
+  elements.aiModel.value = settings.aiModel || "auto";
+  elements.syncStatus.textContent = settings.syncEndpoint ? "云端同步已配置" : "本地历史已启用";
+  elements.aiStatus.textContent = settings.enableAI && settings.aiEndpoint ? "AI 后端已配置" : "本地规则引擎";
+}
+
+async function testAIConnection() {
+  const settings = saveSettings();
+  if (!settings.aiEndpoint) {
+    showToast("请填写 AI 后端地址");
+    return;
+  }
+  elements.aiStatus.textContent = "测试连接中";
+  try {
+    const response = await fetch(settings.aiEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ping: true, model: settings.aiModel })
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    elements.aiStatus.textContent = "AI 后端可用";
+    showToast("连接成功");
+  } catch (error) {
+    elements.aiStatus.textContent = "AI 后端不可用";
+    showToast("连接失败");
+  }
+}
+
+async function syncHistory() {
+  const settings = saveSettings();
+  if (!settings.syncEndpoint) {
+    showToast("请填写云端同步端点");
+    return;
+  }
+  elements.syncStatus.textContent = "同步中";
+  try {
+    const response = await fetch(settings.syncEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workspace: settings.workspaceName || "PromptLens",
+        history: getHistory(),
+        favorites: getFavorites()
+      })
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    elements.syncStatus.textContent = "同步完成";
+    showToast("历史已同步");
+  } catch (error) {
+    elements.syncStatus.textContent = "同步失败，已保留本地数据";
+    showToast("同步失败");
+  }
+}
+
+function renderTemplates() {
+  const query = normalizeText(elements.templateSearch.value).toLowerCase();
+  const categories = ["全部", ...new Set(templates.map((item) => item.category))];
+  elements.categoryFilters.innerHTML = categories.map((category) => `
+    <button class="chip ${category === state.selectedCategory ? "active" : ""}" type="button" data-category="${category}">
+      ${category}
+    </button>
+  `).join("");
+
+  const filtered = templates.filter((item) => {
+    const inCategory = state.selectedCategory === "全部" || item.category === state.selectedCategory;
+    const inQuery = !query || `${item.title} ${item.category} ${item.prompt}`.toLowerCase().includes(query);
+    return inCategory && inQuery;
+  });
+
+  elements.templateList.innerHTML = filtered.map((item) => `
+    <button class="template-card" type="button" data-template-id="${item.id}">
+      <strong>${escapeHtml(item.title)}</strong>
+      <span>${escapeHtml(item.category)} · ${modeNames[item.mode]}</span>
+      <p>${escapeHtml(shorten(item.prompt, 88))}</p>
+    </button>
+  `).join("") || `<div class="template-card"><strong>没有匹配模板</strong><p>换个关键词试试。</p></div>`;
+
+  elements.statTemplates.textContent = String(templates.length);
+}
+
+function applyTemplate(id) {
+  const template = templates.find((item) => item.id === id);
+  if (!template) return;
+  elements.userInput.value = template.prompt;
+  elements.targetAI.value = template.targetAI || "general";
+  elements.tone.value = template.tone || "professional";
+  elements.format.value = template.format || "structured";
+  if (template.toolMode) setToolMode(template.toolMode);
+  setMode(template.mode || "auto");
+  elements.charCount.textContent = elements.userInput.value.length;
+  generate({ count: true });
+  showToast("模板已应用");
+}
+
+function getHistory() {
+  return readJSON(store.history, []);
+}
+
+function setHistory(items) {
+  writeJSON(store.history, items.slice(0, 24));
+  renderHistory();
+}
+
+function saveCurrentHistory() {
+  const source = normalizeText(elements.userInput.value);
+  if (!source || !state.currentResult.prompt) {
+    showToast("先生成一条提示词");
+    return;
+  }
+  const item = buildSavedItem(source);
+  const next = [item, ...getHistory().filter((old) => old.source !== source)];
+  setHistory(next);
+  showToast("已保存历史");
+}
+
+function buildSavedItem(source) {
+  return {
+    id: Date.now(),
+    mode: state.currentResult.mode,
+    source,
+    prompt: state.currentResult.prompt,
+    blueprint: state.currentResult.blueprint,
+    image: state.currentResult.image,
+    variants: state.currentResult.variants,
+    score: state.currentResult.score,
+    createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
+  };
+}
+
+function renderHistory() {
+  renderSavedList(elements.historyList, getHistory(), "暂无历史", "生成并保存后会显示在这里。");
+}
+
+function getFavorites() {
+  return readJSON(store.favorites, []);
+}
+
+function setFavorites(items) {
+  writeJSON(store.favorites, items.slice(0, 24));
+  renderFavorites();
+  renderStats();
+}
+
+function favoriteCurrentPrompt() {
+  const source = normalizeText(elements.userInput.value);
+  if (!source || !state.currentResult.prompt) {
+    showToast("先生成一条提示词");
+    return;
+  }
+  const item = buildSavedItem(source);
+  const next = [item, ...getFavorites().filter((old) => old.prompt !== item.prompt)];
+  setFavorites(next);
+  showToast("已收藏");
+}
+
+function renderFavorites() {
+  renderSavedList(elements.favoriteList, getFavorites(), "暂无收藏", "收藏后的提示词会显示在这里。");
+}
+
+function renderSavedList(container, items, emptyTitle, emptyText) {
+  if (!items.length) {
+    container.innerHTML = `<div class="history-card"><strong>${emptyTitle}</strong><p>${emptyText}</p></div>`;
+    return;
+  }
+  container.innerHTML = items.map((item) => `
+    <button class="history-card" type="button" data-saved-id="${item.id}">
+      <strong>${modeNames[item.mode] || "提示词"} · ${item.score} 分</strong>
+      <span>${item.createdAt}</span>
+      <p>${escapeHtml(shorten(item.source, 104))}</p>
+    </button>
+  `).join("");
+}
+
+function restoreSaved(id) {
+  const item = [...getHistory(), ...getFavorites()].find((entry) => String(entry.id) === String(id));
+  if (!item) return;
+  elements.userInput.value = item.source;
+  elements.charCount.textContent = item.source.length;
+  renderResult({
+    prompt: item.prompt,
+    blueprint: item.blueprint,
+    image: item.image,
+    variants: item.variants || [],
+    mode: item.mode,
+    score: item.score,
+    metrics: calculateMetrics(item.source, collectOptions(), item.mode)
+  });
+  activateTab("prompt");
+  showToast("已载入");
+}
+
+function getStats() {
+  return readJSON(store.stats, { generated: 0 });
+}
+
+function incrementGenerated() {
+  const stats = getStats();
+  stats.generated += 1;
+  writeJSON(store.stats, stats);
+  renderStats();
+}
+
+function renderStats() {
+  elements.statGenerated.textContent = String(getStats().generated || 0);
+  elements.statFavorites.textContent = String(getFavorites().length);
+  elements.statTemplates.textContent = String(templates.length);
 }
 
 async function copyText(text, label = "已复制") {
@@ -388,7 +974,6 @@ async function copyText(text, label = "已复制") {
     showToast("没有可复制的内容");
     return;
   }
-
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
@@ -409,92 +994,77 @@ async function copyText(text, label = "已复制") {
   }
 }
 
-function getHistory() {
-  try {
-    return JSON.parse(localStorage.getItem("promptLensHistory") || "[]");
-  } catch (error) {
-    return [];
+function exportFile(extension) {
+  const text = state.currentResult.prompt;
+  if (!text) {
+    showToast("没有可导出的内容");
+    return;
   }
+  const isMarkdown = extension === "md";
+  const body = isMarkdown
+    ? `# PromptLens 提示词\n\n${text}\n\n## 结构拆解\n\n${state.currentResult.blueprint}`
+    : `${text}\n\n--- 结构拆解 ---\n\n${state.currentResult.blueprint}`;
+  const blob = new Blob([body], { type: isMarkdown ? "text/markdown;charset=utf-8" : "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `promptlens-${Date.now()}.${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast(`已导出 ${extension.toUpperCase()}`);
 }
 
-function setHistory(items) {
-  localStorage.setItem("promptLensHistory", JSON.stringify(items.slice(0, 12)));
-  renderHistory();
-}
-
-function saveCurrentHistory() {
+function shareCurrentPrompt() {
   const source = normalizeText(elements.userInput.value);
-  if (!source || !currentResult.prompt) {
-    showToast("先生成一条提示词");
+  if (!source) {
+    showToast("请输入需求");
     return;
   }
-  const item = {
-    id: Date.now(),
-    mode: currentResult.mode,
-    source,
-    prompt: currentResult.prompt,
-    blueprint: currentResult.blueprint,
-    image: currentResult.image,
-    score: currentResult.score,
-    createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
+  const payload = {
+    input: source,
+    mode: state.selectedMode,
+    toolMode: state.toolMode,
+    options: collectOptions()
   };
-  const next = [item, ...getHistory().filter((old) => old.source !== source)];
-  setHistory(next);
-  showToast("已保存历史");
+  const encoded = encodeState(payload);
+  const url = `${location.origin}${location.pathname}#share=${encoded}`;
+  copyText(url, "分享链接已复制");
 }
 
-function renderHistory() {
-  const history = getHistory();
-  if (!history.length) {
-    elements.historyList.innerHTML = `<div class="history-card"><strong>暂无历史</strong><p>生成并保存后会显示在这里。</p></div>`;
-    return;
+function restoreFromShare() {
+  if (!location.hash.startsWith("#share=")) return;
+  try {
+    const payload = decodeState(location.hash.replace("#share=", ""));
+    elements.userInput.value = payload.input || "";
+    elements.targetAI.value = payload.options?.targetAI || "general";
+    elements.language.value = payload.options?.language || "zh";
+    elements.tone.value = payload.options?.tone || "professional";
+    elements.format.value = payload.options?.format || "structured";
+    elements.detailRange.value = payload.options?.detail || 4;
+    elements.includeRole.checked = payload.options?.includeRole !== false;
+    elements.includeConstraints.checked = payload.options?.includeConstraints !== false;
+    elements.includeFormat.checked = payload.options?.includeFormat !== false;
+    elements.includeChecklist.checked = payload.options?.includeChecklist !== false;
+    setToolMode(payload.toolMode || "create");
+    setMode(payload.mode || "auto");
+    generate({ count: false });
+  } catch (error) {
+    showToast("分享链接无法解析");
   }
-
-  elements.historyList.innerHTML = history.map((item) => `
-    <button class="history-card" type="button" data-id="${item.id}">
-      <strong>${modeNames[item.mode] || "提示词"} · ${item.score} 分</strong>
-      <span>${item.createdAt}</span>
-      <p>${escapeHtml(shorten(item.source, 96))}</p>
-    </button>
-  `).join("");
 }
 
-function restoreHistory(id) {
-  const item = getHistory().find((entry) => String(entry.id) === String(id));
-  if (!item) return;
-  elements.userInput.value = item.source;
-  elements.charCount.textContent = item.source.length;
-  currentResult = {
-    prompt: item.prompt,
-    blueprint: item.blueprint,
-    image: item.image,
-    mode: item.mode,
-    score: item.score,
-    metrics: calculateMetrics(item.source, collectOptions(), item.mode)
-  };
-  renderResult(currentResult);
-  activateTab("prompt");
-  showToast("已载入历史");
+function encodeState(value) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(value))));
 }
 
-function escapeHtml(value) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-let toastTimer = null;
-function showToast(message) {
-  window.clearTimeout(toastTimer);
-  elements.toast.textContent = message;
-  elements.toast.classList.add("show");
-  toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 1800);
+function decodeState(value) {
+  return JSON.parse(decodeURIComponent(escape(atob(value))));
 }
 
 function activateTab(tabName) {
+  state.activeTab = tabName;
   $$(".tab").forEach((tab) => {
     const active = tab.dataset.tab === tabName;
     tab.classList.toggle("active", active);
@@ -510,7 +1080,7 @@ function updateDetailLabel() {
 }
 
 function initTheme() {
-  const stored = localStorage.getItem("promptLensTheme");
+  const stored = localStorage.getItem(store.theme);
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   document.documentElement.dataset.theme = stored || (prefersDark ? "dark" : "light");
 }
@@ -518,14 +1088,44 @@ function initTheme() {
 function toggleTheme() {
   const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
-  localStorage.setItem("promptLensTheme", next);
+  localStorage.setItem(store.theme, next);
 }
 
 function bindEvents() {
   elements.userInput.addEventListener("input", () => {
     elements.charCount.textContent = elements.userInput.value.length;
     window.clearTimeout(elements.userInput.generateTimer);
-    elements.userInput.generateTimer = window.setTimeout(generate, 180);
+    elements.userInput.generateTimer = window.setTimeout(() => generate({ count: false }), 180);
+  });
+
+  elements.templateSearch.addEventListener("input", renderTemplates);
+  elements.categoryFilters.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-category]");
+    if (!button) return;
+    state.selectedCategory = button.dataset.category;
+    renderTemplates();
+  });
+  elements.templateList.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-template-id]");
+    if (card) applyTemplate(card.dataset.templateId);
+  });
+
+  elements.saveWorkspace.addEventListener("click", () => {
+    saveSettings();
+    showToast("账户已保存");
+  });
+  elements.syncHistory.addEventListener("click", syncHistory);
+  elements.saveAIConfig.addEventListener("click", () => {
+    saveSettings();
+    showToast("AI 配置已保存");
+  });
+  elements.testAI.addEventListener("click", testAIConnection);
+  elements.enableAI.addEventListener("change", () => saveSettings());
+  elements.aiModel.addEventListener("change", () => saveSettings());
+
+  elements.toolModeButtons.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-tool-mode]");
+    if (button) setToolMode(button.dataset.toolMode);
   });
 
   elements.modeButtons.addEventListener("click", (event) => {
@@ -537,7 +1137,7 @@ function bindEvents() {
     button.addEventListener("click", () => {
       elements.userInput.value = button.dataset.example;
       elements.charCount.textContent = elements.userInput.value.length;
-      generate();
+      generate({ count: true });
     });
   });
 
@@ -554,45 +1154,68 @@ function bindEvents() {
   ].forEach((control) => {
     control.addEventListener("input", () => {
       updateDetailLabel();
-      generate();
+      generate({ count: false });
     });
     control.addEventListener("change", () => {
       updateDetailLabel();
-      generate();
+      generate({ count: false });
     });
   });
 
+  elements.refreshQuestions.addEventListener("click", () => {
+    renderClarifications();
+    showToast("追问已刷新");
+  });
+  elements.applyClarifications.addEventListener("click", applyClarifications);
   elements.generateBtn.addEventListener("click", () => {
-    const result = generate();
+    const result = generate({ count: true });
     showToast(result.prompt ? "已生成" : "请输入需求");
   });
-
+  elements.aiEnhanceBtn.addEventListener("click", runAIEnhance);
   elements.clearInput.addEventListener("click", () => {
     elements.userInput.value = "";
-    generate();
+    generate({ count: false });
     elements.userInput.focus();
   });
-
-  elements.copyPrompt.addEventListener("click", () => copyText(currentResult.prompt, "提示词已复制"));
-  elements.copyBlueprint.addEventListener("click", () => copyText(currentResult.blueprint, "结构已复制"));
-  elements.saveHistory.addEventListener("click", saveCurrentHistory);
-  elements.themeToggle.addEventListener("click", toggleTheme);
 
   $$(".tab").forEach((tab) => {
     tab.addEventListener("click", () => activateTab(tab.dataset.tab));
   });
 
-  elements.historyList.addEventListener("click", (event) => {
-    const card = event.target.closest("[data-id]");
-    if (card) restoreHistory(card.dataset.id);
+  elements.variantList.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-variant-index]");
+    if (!card) return;
+    const variant = state.currentResult.variants[Number(card.dataset.variantIndex)];
+    if (!variant) return;
+    elements.resultPrompt.textContent = variant.content;
+    state.currentResult.prompt = variant.content;
+    activateTab("prompt");
+    showToast("已切换版本");
   });
+
+  elements.historyList.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-saved-id]");
+    if (card) restoreSaved(card.dataset.savedId);
+  });
+  elements.favoriteList.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-saved-id]");
+    if (card) restoreSaved(card.dataset.savedId);
+  });
+
+  elements.favoritePrompt.addEventListener("click", favoriteCurrentPrompt);
+  elements.saveHistory.addEventListener("click", saveCurrentHistory);
+  elements.sharePrompt.addEventListener("click", shareCurrentPrompt);
+  elements.exportTxt.addEventListener("click", () => exportFile("txt"));
+  elements.exportMd.addEventListener("click", () => exportFile("md"));
+  elements.copyPrompt.addEventListener("click", () => copyText(state.currentResult.prompt, "结果已复制"));
+  elements.themeToggle.addEventListener("click", toggleTheme);
 }
 
 function initAmbientCanvas() {
   const canvas = elements.canvas;
   const context = canvas.getContext("2d");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const nodes = Array.from({ length: 48 }, (_, index) => ({
+  const nodes = Array.from({ length: 52 }, (_, index) => ({
     x: Math.random(),
     y: Math.random(),
     vx: (Math.random() - 0.5) * 0.00018,
@@ -666,12 +1289,43 @@ function initAmbientCanvas() {
   });
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function shorten(text, max) {
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+let toastTimer = null;
+function showToast(message) {
+  window.clearTimeout(toastTimer);
+  elements.toast.textContent = message;
+  elements.toast.classList.add("show");
+  toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 1800);
+}
+
 function init() {
   initTheme();
   bindEvents();
-  updateDetailLabel();
+  renderSettings();
+  renderTemplates();
   renderHistory();
-  generate();
+  renderFavorites();
+  renderStats();
+  updateDetailLabel();
+  renderClarifications();
+  restoreFromShare();
+  if (!elements.userInput.value) generate({ count: false });
   initAmbientCanvas();
 }
 
