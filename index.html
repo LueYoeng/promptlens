@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptLens 提示词精炼台</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <h1>PromptLens</h1>
+          <p>提示词精炼台</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="status-pill">
+          <span class="pulse" aria-hidden="true"></span>
+          <span id="modeStatus">自动识别</span>
+        </div>
+        <button class="icon-button" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">
+          <span class="theme-glyph" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="input-panel" aria-labelledby="inputTitle">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">INPUT</span>
+            <h2 id="inputTitle">原始需求</h2>
+          </div>
+          <button class="ghost-button" id="clearInput" type="button">清空</button>
+        </div>
+
+        <div class="textarea-shell">
+          <textarea id="userInput" placeholder="例如：帮我创建一个用于管理健身会员的网站系统，需要有会员档案、课程预约和数据看板。"></textarea>
+          <div class="textarea-footer">
+            <span id="charCount">0</span>
+            <span>字符</span>
+          </div>
+        </div>
+
+        <div class="examples" aria-label="示例需求">
+          <button type="button" data-example="帮我创建一个咖啡店会员管理网站系统，需要会员档案、消费记录、优惠券、数据看板，并且界面要高级。">开发</button>
+          <button type="button" data-example="为什么我总是制定计划但很难坚持？请帮我分析原因并给出可执行方案。">问答</button>
+          <button type="button" data-example="生成一张未来城市屋顶咖啡馆的图片，雨后夜景，赛博但温暖，适合做网页首屏。">图片</button>
+          <button type="button" data-example="分析一家线上课程平台最近三个月付费转化率下降的可能原因，并给出排查框架。">分析</button>
+        </div>
+
+        <div class="control-block">
+          <label class="control-label">场景</label>
+          <div class="segmented" id="modeButtons">
+            <button class="seg-button active" type="button" data-mode="auto">自动</button>
+            <button class="seg-button" type="button" data-mode="qa">问答</button>
+            <button class="seg-button" type="button" data-mode="code">开发</button>
+            <button class="seg-button" type="button" data-mode="image">图片</button>
+            <button class="seg-button" type="button" data-mode="writing">写作</button>
+            <button class="seg-button" type="button" data-mode="analysis">分析</button>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <label>
+            <span>目标 AI</span>
+            <select id="targetAI">
+              <option value="general">通用 AI</option>
+              <option value="chat">ChatGPT / 对话模型</option>
+              <option value="code">代码助手</option>
+              <option value="image">图像模型</option>
+            </select>
+          </label>
+
+          <label>
+            <span>输出语言</span>
+            <select id="language">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+              <option value="bilingual">中英双语</option>
+            </select>
+          </label>
+
+          <label>
+            <span>语气</span>
+            <select id="tone">
+              <option value="professional">专业清晰</option>
+              <option value="creative">创意丰富</option>
+              <option value="strict">严格精确</option>
+              <option value="friendly">自然友好</option>
+            </select>
+          </label>
+
+          <label>
+            <span>输出格式</span>
+            <select id="format">
+              <option value="structured">结构化</option>
+              <option value="steps">步骤清单</option>
+              <option value="table">表格</option>
+              <option value="plain">自然段</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="range-block">
+          <div class="range-heading">
+            <label for="detailRange">细节密度</label>
+            <span id="detailLabel">精细</span>
+          </div>
+          <input id="detailRange" type="range" min="1" max="5" value="4">
+        </div>
+
+        <div class="toggle-grid">
+          <label class="switch-row">
+            <input type="checkbox" id="includeRole" checked>
+            <span></span>
+            <b>角色定位</b>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" id="includeConstraints" checked>
+            <span></span>
+            <b>约束条件</b>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" id="includeFormat" checked>
+            <span></span>
+            <b>交付格式</b>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" id="includeChecklist" checked>
+            <span></span>
+            <b>检查清单</b>
+          </label>
+        </div>
+
+        <div class="action-row">
+          <button class="primary-button" id="generateBtn" type="button">
+            <span class="button-symbol" aria-hidden="true"></span>
+            生成精准提示词
+          </button>
+          <button class="secondary-button" id="copyPrompt" type="button">复制结果</button>
+        </div>
+      </section>
+
+      <section class="output-panel" aria-labelledby="outputTitle">
+        <div class="panel-heading output-heading">
+          <div>
+            <span class="eyebrow">OUTPUT</span>
+            <h2 id="outputTitle">优化结果</h2>
+          </div>
+          <div class="score" aria-label="提示词评分">
+            <span id="scoreValue">0</span>
+            <small>分</small>
+          </div>
+        </div>
+
+        <div class="quality-grid">
+          <div class="quality-item">
+            <span>清晰度</span>
+            <div><i id="barClarity"></i></div>
+          </div>
+          <div class="quality-item">
+            <span>约束</span>
+            <div><i id="barConstraint"></i></div>
+          </div>
+          <div class="quality-item">
+            <span>可执行</span>
+            <div><i id="barAction"></i></div>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="结果视图">
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整提示词</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">结构拆解</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="image">图片参数</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="history">历史</button>
+        </div>
+
+        <div class="result-area">
+          <pre id="resultPrompt" class="result-view active" data-panel="prompt"></pre>
+          <pre id="resultBlueprint" class="result-view" data-panel="blueprint"></pre>
+          <pre id="resultImage" class="result-view" data-panel="image"></pre>
+          <div id="historyList" class="history-list result-view" data-panel="history"></div>
+        </div>
+
+        <div class="output-actions">
+          <button class="ghost-button" id="copyBlueprint" type="button">复制结构</button>
+          <button class="ghost-button" id="saveHistory" type="button">保存历史</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
