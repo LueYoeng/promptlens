@@ -120,3 +120,15 @@ https://<github-user>.github.io/<repo-name>/
 ```
 
 注意：GitHub Pages 只能展示静态版。如果要让注册、登录、云端历史、AI 后端这些动态功能在公网可用，需要部署到 Vercel、Cloudflare、Railway、Render 或自己的服务器。
+
+## Render 长期部署
+
+仓库已包含 `render.yaml`，可以在 Render 里选择 Blueprint 部署。
+
+基本设置：
+
+- Runtime: Node
+- Start Command: `npm start`
+- Environment Variable: `OPENAI_API_KEY` 可选
+
+免费实例可能会休眠，本地 JSON 数据库也不适合长期生产数据。正式商用建议把数据迁移到 Supabase、Postgres 或其他托管数据库。
