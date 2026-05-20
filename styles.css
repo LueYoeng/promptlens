@@ -97,8 +97,8 @@ button {
 
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+  grid-template-columns: auto minmax(180px, 1fr) minmax(320px, 420px);
+  align-items: start;
   gap: 18px;
   min-height: 64px;
   margin-bottom: 14px;
@@ -171,10 +171,45 @@ button {
 }
 
 .topbar-actions {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.top-auth {
+  order: 2;
+  flex: 0 0 100%;
+  width: min(360px, 100%);
+  padding: 12px;
+  box-shadow: var(--soft-shadow);
+}
+
+.top-auth .section-heading {
+  margin-bottom: 2px;
+}
+
+.top-auth .section-heading h2 {
+  font-size: 0.96rem;
+}
+
+.top-auth .compact-fields {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.top-auth .compact-fields input {
+  height: 36px;
+}
+
+.top-auth .auth-status {
+  padding: 9px;
+}
+
+.top-auth .mini-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .workflow-strip {
@@ -277,7 +312,7 @@ button {
 
 .product-grid {
   display: grid;
-  grid-template-columns: minmax(420px, 0.94fr) minmax(520px, 1.06fr);
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -299,25 +334,31 @@ button {
 }
 
 .side-panel {
-  order: 3;
-  grid-column: 1 / -1;
+  order: 1;
+  grid-column: 1;
+  grid-row: 1 / span 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
   box-shadow: var(--soft-shadow);
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .input-panel {
-  order: 1;
+  order: 2;
+  grid-column: 2;
 }
 
 .output-panel {
-  order: 2;
+  order: 3;
+  grid-column: 2;
   display: flex;
   flex-direction: column;
-  min-height: 760px;
-  position: sticky;
-  top: 16px;
+  min-height: 640px;
+  position: static;
 }
 
 .tool-section {
@@ -331,7 +372,7 @@ button {
 
 .support-heading {
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 6px;
   padding: 14px;
   border: 1px solid var(--line);
@@ -1286,12 +1327,13 @@ input[type="range"] {
 
 @media (max-width: 1320px) {
   .product-grid {
-    grid-template-columns: minmax(300px, 0.86fr) minmax(420px, 1.14fr);
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
   }
 
   .side-panel {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    grid-template-columns: 1fr;
   }
 
   .workflow-strip {
@@ -1310,6 +1352,14 @@ input[type="range"] {
     grid-template-columns: 1fr;
   }
 
+  .topbar {
+    align-items: stretch;
+  }
+
+  .top-auth {
+    width: 100%;
+  }
+
   .top-metrics,
   .topbar-actions {
     justify-content: stretch;
@@ -1323,6 +1373,27 @@ input[type="range"] {
   .output-panel {
     min-height: 680px;
     position: static;
+  }
+
+  .side-panel,
+  .input-panel,
+  .output-panel {
+    grid-column: 1;
+  }
+
+  .side-panel {
+    grid-row: auto;
+    position: static;
+    max-height: none;
+    order: 3;
+  }
+
+  .input-panel {
+    order: 1;
+  }
+
+  .output-panel {
+    order: 2;
   }
 
   .workflow-steps {

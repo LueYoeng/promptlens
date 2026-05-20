@@ -35,6 +35,37 @@
         <button class="icon-button" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">
           <span class="theme-glyph" aria-hidden="true"></span>
         </button>
+        <section class="tool-section auth-section top-auth">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">SIGN IN</span>
+              <h2>商用账户</h2>
+            </div>
+          </div>
+          <div class="auth-status">
+            <b id="authName">访客模式</b>
+            <span id="authEmail">登录后可云端保存历史和收藏</span>
+          </div>
+          <div class="compact-fields" id="authFields">
+            <label>
+              <span>名称</span>
+              <input id="authNameInput" type="text" autocomplete="name" placeholder="你的名字或团队名">
+            </label>
+            <label>
+              <span>邮箱</span>
+              <input id="authEmailInput" type="email" autocomplete="email" placeholder="you@example.com">
+            </label>
+            <label>
+              <span>密码</span>
+              <input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="至少 6 位">
+            </label>
+          </div>
+          <div class="mini-actions">
+            <button class="secondary-button" id="loginBtn" type="button">登录</button>
+            <button class="ghost-button" id="registerBtn" type="button">注册</button>
+          </div>
+          <button class="ghost-button wide hidden" id="logoutBtn" type="button">退出登录</button>
+        </section>
       </div>
     </header>
 
@@ -81,38 +112,6 @@
           </div>
           <p class="guide-summary">第一次使用建议先阅读完整帮助，了解主流程、各个按钮和高级功能的区别。</p>
           <button class="primary-button guide-open-button" id="openHelpGuide" type="button">打开详细使用帮助</button>
-        </section>
-
-        <section class="tool-section auth-section">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">SIGN IN</span>
-              <h2>商用账户</h2>
-            </div>
-          </div>
-          <div class="auth-status">
-            <b id="authName">访客模式</b>
-            <span id="authEmail">登录后可云端保存历史和收藏</span>
-          </div>
-          <div class="compact-fields" id="authFields">
-            <label>
-              <span>名称</span>
-              <input id="authNameInput" type="text" autocomplete="name" placeholder="你的名字或团队名">
-            </label>
-            <label>
-              <span>邮箱</span>
-              <input id="authEmailInput" type="email" autocomplete="email" placeholder="you@example.com">
-            </label>
-            <label>
-              <span>密码</span>
-              <input id="authPasswordInput" type="password" autocomplete="current-password" placeholder="至少 6 位">
-            </label>
-          </div>
-          <div class="mini-actions">
-            <button class="secondary-button" id="loginBtn" type="button">登录</button>
-            <button class="ghost-button" id="registerBtn" type="button">注册</button>
-          </div>
-          <button class="ghost-button wide hidden" id="logoutBtn" type="button">退出登录</button>
         </section>
 
         <section class="tool-section">
