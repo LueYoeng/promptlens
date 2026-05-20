@@ -612,6 +612,54 @@ function buildVariants(text, mode, options) {
   ];
 }
 
+function plainTextBlock(value) {
+  const lines = String(value || "").replace(/```[\w-]*\n?/g, "").replace(/```/g, "").split("\n");
+  let listIndex = 0;
+  return lines.map((line) => {
+    const heading = line.match(/^\s{0,3}#{1,6}\s*(.+?)\s*$/);
+    if (heading) {
+      listIndex = 0;
+      const title = heading[1].replace(/[:：]\s*$/, "");
+      return `${title}：`;
+    }
+
+    const bullet = line.match(/^\s*[-*+]\s+(.+?)\s*$/);
+    if (bullet) {
+      listIndex += 1;
+      return `（${listIndex}）${bullet[1]}`;
+    }
+
+    const ordered = line.match(/^\s*\d+[.)、]\s+(.+?)\s*$/);
+    if (ordered) {
+      listIndex += 1;
+      return `（${listIndex}）${ordered[1]}`;
+    }
+
+    if (!line.trim()) {
+      listIndex = 0;
+      return "";
+    }
+
+    return line
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/__(.*?)__/g, "$1")
+      .replace(/`([^`]+)`/g, "$1");
+  }).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function normalizeResultText(result) {
+  return {
+    ...result,
+    prompt: plainTextBlock(result.prompt),
+    blueprint: plainTextBlock(result.blueprint),
+    image: plainTextBlock(result.image),
+    variants: (result.variants || []).map((variant) => ({
+      ...variant,
+      content: plainTextBlock(variant.content)
+    }))
+  };
+}
+
 function calculateMetrics(text, options, mode) {
   const lengthScore = Math.min(100, 34 + Math.round(text.length / 2.6));
   const hasRole = options.includeRole ? 12 : 0;
@@ -784,18 +832,19 @@ async function loadCloudData() {
 }
 
 function renderResult(result) {
-  state.currentResult = result;
-  elements.resultPrompt.textContent = result.prompt;
-  elements.resultBlueprint.textContent = result.blueprint;
-  elements.resultImage.textContent = result.image;
-  elements.scoreValue.textContent = result.score;
-  elements.barClarity.style.width = `${result.metrics.clarity || 0}%`;
-  elements.barContext.style.width = `${result.metrics.context || 0}%`;
-  elements.barConstraint.style.width = `${result.metrics.constraint || 0}%`;
-  elements.barFormat.style.width = `${result.metrics.format || 0}%`;
-  elements.barAction.style.width = `${result.metrics.action || 0}%`;
-  elements.modeStatus.textContent = modeNames[result.mode] || modeNames.auto;
-  renderVariants(result.variants);
+  const normalized = normalizeResultText(result);
+  state.currentResult = normalized;
+  elements.resultPrompt.textContent = normalized.prompt;
+  elements.resultBlueprint.textContent = normalized.blueprint;
+  elements.resultImage.textContent = normalized.image;
+  elements.scoreValue.textContent = normalized.score;
+  elements.barClarity.style.width = `${normalized.metrics.clarity || 0}%`;
+  elements.barContext.style.width = `${normalized.metrics.context || 0}%`;
+  elements.barConstraint.style.width = `${normalized.metrics.constraint || 0}%`;
+  elements.barFormat.style.width = `${normalized.metrics.format || 0}%`;
+  elements.barAction.style.width = `${normalized.metrics.action || 0}%`;
+  elements.modeStatus.textContent = modeNames[normalized.mode] || modeNames.auto;
+  renderVariants(normalized.variants);
 }
 
 function renderVariants(variants) {
@@ -1436,8 +1485,9 @@ function bindEvents() {
     if (!card) return;
     const variant = state.currentResult.variants[Number(card.dataset.variantIndex)];
     if (!variant) return;
-    elements.resultPrompt.textContent = variant.content;
-    state.currentResult.prompt = variant.content;
+    const content = plainTextBlock(variant.content);
+    elements.resultPrompt.textContent = content;
+    state.currentResult.prompt = content;
     activateTab("prompt");
     showToast("已切换版本");
   });

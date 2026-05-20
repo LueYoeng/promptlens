@@ -444,9 +444,12 @@ function serveStatic(req, res, url) {
       return;
     }
     const ext = path.extname(filePath);
+    const cacheControl = [".html", ".js", ".css"].includes(ext)
+      ? "no-cache"
+      : "public, max-age=86400";
     res.writeHead(200, {
       "Content-Type": mimeTypes[ext] || "application/octet-stream",
-      "Cache-Control": ext === ".html" ? "no-store" : "public, max-age=60"
+      "Cache-Control": cacheControl
     });
     res.end(data);
   });
