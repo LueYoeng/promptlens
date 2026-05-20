@@ -17,6 +17,7 @@
   --success: #26724d;
   --warning: #a46a12;
   --shadow: 0 22px 50px rgba(21, 34, 53, 0.15);
+  --soft-shadow: 0 12px 32px rgba(21, 34, 53, 0.10);
   --radius: 8px;
 }
 
@@ -39,6 +40,7 @@
   --success: #75c69a;
   --warning: #e0ad50;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  --soft-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
 }
 
 * {
@@ -87,7 +89,7 @@ button {
 .app-shell {
   position: relative;
   z-index: 1;
-  width: min(1720px, calc(100% - 40px));
+  width: min(1580px, calc(100% - 40px));
   min-height: 100vh;
   margin: 0 auto;
   padding: 22px 0 32px;
@@ -99,7 +101,7 @@ button {
   align-items: center;
   gap: 18px;
   min-height: 64px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .brand {
@@ -175,6 +177,59 @@ button {
   gap: 10px;
 }
 
+.workflow-strip {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(520px, 1.18fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background:
+    linear-gradient(120deg, var(--accent-soft), transparent 46%),
+    color-mix(in srgb, var(--panel-solid) 88%, transparent);
+  box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(22px);
+}
+
+.workflow-copy h2 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+}
+
+.workflow-copy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.58;
+}
+
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workflow-step {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-solid);
+}
+
+.workflow-step b {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.workflow-step span {
+  font-weight: 850;
+}
+
 .pulse {
   width: 8px;
   height: 8px;
@@ -222,7 +277,7 @@ button {
 
 .product-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.72fr) minmax(390px, 1fr) minmax(460px, 1.12fr);
+  grid-template-columns: minmax(420px, 0.94fr) minmax(520px, 1.06fr);
   gap: 18px;
   align-items: start;
 }
@@ -231,7 +286,7 @@ button {
 .input-panel,
 .output-panel {
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 10px;
   background: var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
@@ -240,18 +295,29 @@ button {
 .side-panel,
 .input-panel,
 .output-panel {
-  padding: 18px;
+  padding: 20px;
 }
 
 .side-panel {
+  order: 3;
+  grid-column: 1 / -1;
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+  box-shadow: var(--soft-shadow);
+}
+
+.input-panel {
+  order: 1;
 }
 
 .output-panel {
+  order: 2;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 136px);
+  min-height: 760px;
+  position: sticky;
+  top: 16px;
 }
 
 .tool-section {
@@ -261,6 +327,30 @@ button {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
+}
+
+.support-heading {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 68%),
+    var(--panel-solid);
+}
+
+.support-heading h2 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.support-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .panel-heading,
@@ -276,7 +366,9 @@ button {
 }
 
 .panel-heading {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
 }
 
 .panel-heading h2,
@@ -352,6 +444,14 @@ select {
   outline: 0;
   color: var(--text);
   background: var(--panel-solid);
+}
+
+.search-input:hover,
+.compact-fields input:hover,
+select:hover,
+.textarea-shell:hover,
+.result-area:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 
 .compact-fields {
@@ -550,6 +650,7 @@ select {
   border-radius: var(--radius);
   background: var(--panel-solid);
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
 textarea {
@@ -597,7 +698,7 @@ input::placeholder {
 .clarify-box {
   display: grid;
   gap: 10px;
-  margin-bottom: 16px;
+  margin: 16px 0;
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -890,6 +991,7 @@ input[type="range"] {
     linear-gradient(180deg, color-mix(in srgb, var(--panel-solid) 92%, transparent), var(--panel-solid)),
     var(--panel-solid);
   overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .result-view {
@@ -1192,6 +1294,10 @@ input[type="range"] {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .workflow-strip {
+    grid-template-columns: 1fr;
+  }
+
   .template-list {
     max-height: 280px;
   }
@@ -1216,17 +1322,23 @@ input[type="range"] {
 
   .output-panel {
     min-height: 680px;
+    position: static;
+  }
+
+  .workflow-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
   .app-shell {
-    width: min(100% - 24px, 1720px);
+    width: min(100% - 24px, 1580px);
     padding-top: 16px;
   }
 
   .top-metrics,
   .topbar-actions,
+  .workflow-steps,
   .examples,
   .field-grid,
   .toggle-grid,
@@ -1255,6 +1367,14 @@ input[type="range"] {
   .input-panel,
   .output-panel {
     padding: 14px;
+  }
+
+  .workflow-strip {
+    padding: 14px;
+  }
+
+  .workflow-step {
+    min-height: 68px;
   }
 
   .help-dialog {
