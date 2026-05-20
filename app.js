@@ -387,26 +387,34 @@ function detailInstruction(level) {
   return map[level] || map[4];
 }
 
+function textSection(title, body) {
+  return `${title}：\n${body}`;
+}
+
+function textList(items) {
+  return items.map((item, index) => `（${index + 1}）${item}`).join("\n");
+}
+
 function buildModeRequirements(mode, detail) {
   const base = profiles[mode] || profiles.qa;
-  const lines = base.focus.map((item) => `- ${item}`);
+  const lines = [...base.focus];
   if (mode === "code") {
-    lines.push("- 如果需要创建界面，请直接给出可运行的页面、组件、样式和交互逻辑");
-    lines.push("- 如果存在现有代码库，请先阅读项目结构并遵循已有技术栈、命名和样式约定");
-    if (detail >= 4) lines.push("- 明确说明如何运行、如何验证、有哪些边界情况尚未覆盖");
+    lines.push("如果需要创建界面，请直接给出可运行的页面、组件、样式和交互逻辑");
+    lines.push("如果存在现有代码库，请先阅读项目结构并遵循已有技术栈、命名和样式约定");
+    if (detail >= 4) lines.push("明确说明如何运行、如何验证、有哪些边界情况尚未覆盖");
   }
   if (mode === "image") {
-    lines.push("- 正向提示词需要包含主体、环境、构图、镜头、光线、材质、色彩、风格、质量词");
-    lines.push("- 负面提示词需要覆盖畸形、低清晰度、错误文字、过度噪点和不自然结构");
-    if (detail >= 4) lines.push("- 给出 2 个风格变体，方便继续迭代");
+    lines.push("正向提示词需要包含主体、环境、构图、镜头、光线、材质、色彩、风格、质量词");
+    lines.push("负面提示词需要覆盖畸形、低清晰度、错误文字、过度噪点和不自然结构");
+    if (detail >= 4) lines.push("给出 2 个风格变体，方便继续迭代");
   }
   if (mode === "analysis" && detail >= 4) {
-    lines.push("- 把结论分为高可信、中可信、待验证三类");
+    lines.push("把结论分为高可信、中可信、待验证三类");
   }
   if (mode === "qa" && detail >= 4) {
-    lines.push("- 对不确定内容标注“推断”，不要把假设写成事实");
+    lines.push("对不确定内容标注“推断”，不要把假设写成事实");
   }
-  return lines.join("\n");
+  return textList(lines);
 }
 
 function buildChecklist(mode) {
@@ -423,7 +431,7 @@ function buildChecklist(mode) {
     writing: ["是否符合受众和渠道", "是否有标题或结构", "是否避免空泛表达"],
     qa: ["是否先给结论", "是否解释关键原因", "是否包含可操作建议"]
   };
-  return [...common, ...(extra[mode] || extra.qa)].map((item) => `- ${item}`).join("\n");
+  return textList([...common, ...(extra[mode] || extra.qa)]);
 }
 
 function buildOutputFormat(format, mode) {
@@ -446,33 +454,33 @@ function buildPrompt(text, options) {
   const sourceLabel = options.toolMode === "rewrite" ? "待改写提示词" : "原始需求";
 
   if (options.includeRole) {
-    sections.push(`## 角色\n${profile.role}`);
+    sections.push(textSection("角色", profile.role));
   }
 
   if (options.toolMode === "rewrite") {
-    sections.push("## 任务\n请把下面这段提示词升级为更精准、上下文更完整、输出标准更明确的版本。不要直接回答原提示词中的任务。");
+    sections.push(textSection("任务", "请把下面这段提示词升级为更精准、上下文更完整、输出标准更明确的版本。不要直接回答原提示词中的任务。"));
   }
 
-  sections.push(`## ${sourceLabel}\n${text}`);
-  sections.push(`## 目标\n${options.toolMode === "rewrite" ? "优化提示词本身，让它更适合交给 AI 使用。" : profile.goal}`);
-  sections.push(`## 适配对象\n${getTargetInstruction(options.targetAI)}`);
-  sections.push(`## 语言与语气\n${getLanguageInstruction(options.language)}\n${getToneInstruction(options.tone)}`);
+  sections.push(textSection(sourceLabel, text));
+  sections.push(textSection("目标", options.toolMode === "rewrite" ? "优化提示词本身，让它更适合交给 AI 使用。" : profile.goal));
+  sections.push(textSection("适配对象", getTargetInstruction(options.targetAI)));
+  sections.push(textSection("语言与语气", `${getLanguageInstruction(options.language)}\n${getToneInstruction(options.tone)}`));
 
   if (options.includeConstraints) {
-    sections.push(`## 执行要求\n${buildModeRequirements(mode, options.detail)}`);
-    sections.push(`## 细节密度\n${detailInstruction(options.detail)}`);
+    sections.push(textSection("执行要求", buildModeRequirements(mode, options.detail)));
+    sections.push(textSection("细节密度", detailInstruction(options.detail)));
   }
 
   if (options.includeFormat) {
-    sections.push(`## 输出格式\n${buildOutputFormat(options.format, mode)}`);
+    sections.push(textSection("输出格式", buildOutputFormat(options.format, mode)));
   }
 
   if (options.includeChecklist) {
-    sections.push(`## 自检清单\n在最终回答前检查：\n${buildChecklist(mode)}`);
+    sections.push(textSection("自检清单", `在最终回答前检查：\n${buildChecklist(mode)}`));
   }
 
   if (options.detail >= 4) {
-    sections.push("## 信息不足时的处理\n如果缺少关键上下文，请先列出最多 5 个澄清问题；若用户希望你直接继续，请明确写出你的合理假设再执行。");
+    sections.push(textSection("信息不足时的处理", "如果缺少关键上下文，请先列出最多 5 个澄清问题；若用户希望你直接继续，请明确写出你的合理假设再执行。"));
   }
 
   const prompt = sections.join("\n\n");
@@ -501,18 +509,20 @@ function buildBlueprint(text, mode, options) {
     `推荐角色：${profile.role}`,
     "",
     "关键槽位：",
-    `- 任务目标：${profile.goal}`,
-    `- 输出要求：${profile.deliverable}`,
-    `- 目标 AI：${getTargetInstruction(options.targetAI)}`,
-    `- 语气：${getToneInstruction(options.tone)}`,
-    `- 语言：${getLanguageInstruction(options.language)}`,
-    `- 格式：${getFormatInstruction(options.format)}`,
+    textList([
+      `任务目标：${profile.goal}`,
+      `输出要求：${profile.deliverable}`,
+      `目标 AI：${getTargetInstruction(options.targetAI)}`,
+      `语气：${getToneInstruction(options.tone)}`,
+      `语言：${getLanguageInstruction(options.language)}`,
+      `格式：${getFormatInstruction(options.format)}`
+    ]),
     "",
     "约束重点：",
     buildModeRequirements(mode, options.detail),
     "",
     "改进建议：",
-    buildImprovementTips(text, options, mode).map((item) => `- ${item}`).join("\n"),
+    textList(buildImprovementTips(text, options, mode)),
     "",
     `风险提醒：${riskLine}`
   ].join("\n");
@@ -539,13 +549,17 @@ function buildImagePanel(text, mode, options) {
     "低清晰度，模糊，畸形结构，多余手指，错误文字，水印，低质量，过度噪点，过曝，主体被遮挡，构图混乱。",
     "",
     "建议参数：",
-    "- 画幅：16:9 用于网站首屏，1:1 用于头像或社媒，4:5 用于海报",
-    "- 风格强度：中等，避免风格盖过主体",
-    `- 语言：${languageLine}`,
+    textList([
+      "画幅：16:9 用于网站首屏，1:1 用于头像或社媒，4:5 用于海报",
+      "风格强度：中等，避免风格盖过主体",
+      `语言：${languageLine}`
+    ]),
     "",
     "可选变体：",
-    "- 更商业：干净背景、产品级光线、留白充足",
-    "- 更叙事：加入人物动作、环境细节、时间和天气"
+    textList([
+      "更商业：干净背景、产品级光线、留白充足",
+      "更叙事：加入人物动作、环境细节、时间和天气"
+    ])
   ].join("\n");
 }
 
@@ -667,7 +681,7 @@ function applyClarifications() {
   const addition = [
     "",
     "补充信息：",
-    ...answers.map((item) => `- ${item.question} ${item.answer}`)
+    ...answers.map((item, index) => `（${index + 1}）${item.question} ${item.answer}`)
   ].join("\n");
 
   elements.userInput.value = `${elements.userInput.value.trim()}${addition}`;

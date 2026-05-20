@@ -359,18 +359,19 @@ async function optimizeWithAi(input, body) {
   const payload = {
     model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
     messages: [
-      { role: "system", content: "You refine user requests into precise production-grade AI prompts. Return JSON only." },
+      { role: "system", content: "You refine user requests into precise production-grade AI prompts. Return JSON only. Use plain text in all user-facing fields, not Markdown. Do not use # headings, Markdown bullets, code fences, or table syntax." },
       {
         role: "user",
         content: JSON.stringify({
           input,
           mode: body.mode || "auto",
           options: body.options || {},
+          formattingRule: "所有面向用户的内容都使用普通文本。小标题使用“标题：”，列表使用中文编号“（1）（2）（3）”，不要使用 Markdown。",
           requestedShape: {
-            prompt: "完整优化提示词",
-            blueprint: "结构拆解",
+            prompt: "完整优化提示词，普通文本格式",
+            blueprint: "结构拆解，普通文本格式",
             score: "0-100",
-            variants: [{ title: "版本名", note: "适用场景", content: "提示词内容" }]
+            variants: [{ title: "版本名", note: "适用场景", content: "提示词内容，普通文本格式" }]
           }
         })
       }
@@ -414,6 +415,7 @@ function buildFallbackPrompt(input, body) {
   const options = body.options || {};
   return [
     "你是一名资深 AI 提示词架构师，请把下面的原始需求转化为可直接交给 AI 执行的高质量提示词。",
+    "请使用普通文本格式，不要使用 Markdown 标题、短横线列表、代码块或表格语法。",
     "",
     `原始需求：${input}`,
     "",
