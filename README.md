@@ -1,14 +1,19 @@
 # PromptLens
 
-PromptLens 是一个静态网页工具，用于把原始需求、问题、图片想法、开发需求或已有提示词优化成更精准的 AI 提示词。
+PromptLens 是一个动态提示词优化网站，用于把原始需求、问题、图片想法、开发需求或已有提示词优化成更精准的 AI 提示词。
 
 ## 当前功能
 
 - 动态后端：Node 服务、API 路由、本地 JSON 数据库
 - 商用账户：注册、登录、退出、会话令牌
 - 云端历史与收藏：登录后保存到服务端数据库
+- 正式数据库适配：配置 `DATABASE_URL` 后可使用 Supabase / PostgreSQL，未配置时自动使用本地 JSON
+- 对话式优化：先追问缺失信息，再把回答合并进最终提示词
+- 评分解释：解释分数来源、短板和下一步提升建议
+- 个人工作台：展示历史、收藏、自定义模板和导出记录
+- 自定义模板：登录用户可保存到云端，访客可保存到本地浏览器
 - 服务端模板与统计：模板、生成量、收藏量通过 API 获取
-- 安全 AI 代理：通过后端 `/api/optimize` 调用 AI，避免在前端暴露 API Key
+- 安全 AI 代理：通过后端 `/api/optimize` 调用真实 AI 模型，避免在前端暴露 API Key
 - 模板中心：开发、图片、写作、分析、商业、个人场景模板
 - 追问模式：自动生成补充问题，并把回答合并进需求
 - 提示词改写器：优化已有提示词，而不是执行原提示词
@@ -47,7 +52,10 @@ data/db.json
 
 - `GET /api/health`：健康检查
 - `GET /api/templates`：获取服务端模板
+- `POST /api/templates`：保存自定义模板
 - `GET /api/stats`：获取站点统计
+- `GET /api/dashboard`：读取个人工作台
+- `POST /api/exports`：记录导出行为
 - `POST /api/auth/register`：注册账户
 - `POST /api/auth/login`：登录账户
 - `POST /api/auth/logout`：退出登录
@@ -65,10 +73,30 @@ GitHub Pages 只能托管静态文件，不能安全保存 API Key。动态版�
 ```bash
 OPENAI_API_KEY=your_api_key
 OPENAI_MODEL=gpt-4.1-mini
+OPENAI_FAST_MODEL=gpt-4.1-mini
+OPENAI_PRO_MODEL=gpt-4.1
+OPENAI_CREATIVE_MODEL=gpt-4.1
 npm start
 ```
 
 如果没有配置 `OPENAI_API_KEY`，`/api/optimize` 会返回服务端规则增强结果，网站仍然可用。
+
+如果使用兼容 OpenAI Chat Completions 的模型网关，可以配置：
+
+```bash
+OPENAI_BASE_URL=https://your-compatible-provider.example.com/v1
+OPENAI_API_KEY=your_provider_key
+```
+
+## 正式数据库
+
+本地默认使用 `data/db.json`，适合测试和演示。正式商用建议使用 Supabase 或 PostgreSQL，并在 Render 环境变量中配置：
+
+```bash
+DATABASE_URL=postgresql://user:password@host:5432/database
+```
+
+服务启动后会自动创建 `promptlens_store` 表，把账号、历史、收藏、模板、导出记录和事件保存到数据库。没有配置 `DATABASE_URL` 时会自动回退到本地 JSON。
 
 前端会向后端发送：
 
@@ -95,6 +123,8 @@ npm start
   "blueprint": "结构拆解",
   "image": "图片参数，可选",
   "score": 92,
+  "scoreExplanation": "评分解释和提升建议",
+  "questions": ["需要追问的问题"],
   "variants": [
     {
       "title": "专业版",

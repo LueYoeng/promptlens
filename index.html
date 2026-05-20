@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PromptLens 提示词精炼台</title>
-  <link rel="stylesheet" href="styles.css?v=20260520-plain-text">
-  <script defer src="app.js?v=20260520-plain-text"></script>
+  <link rel="stylesheet" href="styles.css?v=20260520-pro-suite">
+  <script defer src="app.js?v=20260520-pro-suite"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -124,14 +124,39 @@
           <input class="search-input" id="templateSearch" type="search" placeholder="搜索网站、图片、文案、分析...">
           <div class="chip-row" id="categoryFilters" aria-label="模板分类"></div>
           <div class="template-list" id="templateList"></div>
+          <div class="custom-template-box">
+            <div class="section-heading inline">
+              <div>
+                <span class="eyebrow">CUSTOM</span>
+                <h3>自定义模板</h3>
+              </div>
+            </div>
+            <div class="compact-fields">
+              <label>
+                <span>模板名称</span>
+                <input id="customTemplateTitle" type="text" placeholder="例如：短视频脚本">
+              </label>
+              <label>
+                <span>分类</span>
+                <input id="customTemplateCategory" type="text" placeholder="例如：写作">
+              </label>
+            </div>
+            <textarea class="mini-textarea" id="customTemplatePrompt" placeholder="写入你常用的需求模板..."></textarea>
+            <button class="secondary-button wide" id="saveCustomTemplate" type="button">保存自定义模板</button>
+          </div>
         </section>
 
         <section class="tool-section">
           <div class="section-heading">
             <div>
               <span class="eyebrow">ACCOUNT</span>
-              <h2>工作区</h2>
+              <h2>个人工作台</h2>
             </div>
+          </div>
+          <div class="workspace-summary" id="workspaceSummary">
+            <div><b>0</b><span>历史</span></div>
+            <div><b>0</b><span>收藏</span></div>
+            <div><b>0</b><span>模板</span></div>
           </div>
           <div class="compact-fields">
             <label>
@@ -224,6 +249,23 @@
           </div>
           <div class="clarification-list" id="clarificationList"></div>
           <button class="secondary-button wide" id="applyClarifications" type="button">应用补充信息</button>
+        </section>
+
+        <section class="conversation-box">
+          <div class="section-heading inline">
+            <div>
+              <span class="eyebrow">CHAT FLOW</span>
+              <h3>对话式优化</h3>
+            </div>
+            <button class="ghost-button" id="startConversation" type="button">开始追问</button>
+          </div>
+          <div class="conversation-list" id="conversationList">
+            <div class="chat-message assistant">输入需求后点击“开始追问”，系统会先问关键问题，再生成最终提示词。</div>
+          </div>
+          <div class="conversation-reply">
+            <textarea class="mini-textarea" id="conversationReply" placeholder="在这里回答追问，例如：目标用户是咖啡店老板，需要电脑和手机都能用。"></textarea>
+            <button class="secondary-button" id="sendConversationReply" type="button">发送并优化</button>
+          </div>
         </section>
 
         <div class="control-block">
@@ -357,6 +399,7 @@
         <div class="tabs" role="tablist" aria-label="结果视图">
           <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整提示词</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="versions">版本对比</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="score">评分解释</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">结构拆解</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="image">图片参数</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="history">历史</button>
@@ -366,6 +409,7 @@
         <div class="result-area">
           <pre id="resultPrompt" class="result-view active" data-panel="prompt"></pre>
           <div id="variantList" class="variant-list result-view" data-panel="versions"></div>
+          <pre id="resultScore" class="result-view" data-panel="score"></pre>
           <pre id="resultBlueprint" class="result-view" data-panel="blueprint"></pre>
           <pre id="resultImage" class="result-view" data-panel="image"></pre>
           <div id="historyList" class="history-list result-view" data-panel="history"></div>

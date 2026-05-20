@@ -25,6 +25,11 @@ const elements = {
   templateSearch: $("#templateSearch"),
   categoryFilters: $("#categoryFilters"),
   templateList: $("#templateList"),
+  customTemplateTitle: $("#customTemplateTitle"),
+  customTemplateCategory: $("#customTemplateCategory"),
+  customTemplatePrompt: $("#customTemplatePrompt"),
+  saveCustomTemplate: $("#saveCustomTemplate"),
+  workspaceSummary: $("#workspaceSummary"),
   workspaceName: $("#workspaceName"),
   syncEndpoint: $("#syncEndpoint"),
   saveWorkspace: $("#saveWorkspace"),
@@ -44,6 +49,10 @@ const elements = {
   refreshQuestions: $("#refreshQuestions"),
   clarificationList: $("#clarificationList"),
   applyClarifications: $("#applyClarifications"),
+  startConversation: $("#startConversation"),
+  conversationList: $("#conversationList"),
+  conversationReply: $("#conversationReply"),
+  sendConversationReply: $("#sendConversationReply"),
   modeButtons: $("#modeButtons"),
   targetAI: $("#targetAI"),
   language: $("#language"),
@@ -65,6 +74,7 @@ const elements = {
   barAction: $("#barAction"),
   resultPrompt: $("#resultPrompt"),
   variantList: $("#variantList"),
+  resultScore: $("#resultScore"),
   resultBlueprint: $("#resultBlueprint"),
   resultImage: $("#resultImage"),
   historyList: $("#historyList"),
@@ -82,6 +92,7 @@ const store = {
   history: "promptLensHistory",
   favorites: "promptLensFavorites",
   settings: "promptLensSettings",
+  customTemplates: "promptLensCustomTemplates",
   stats: "promptLensStats",
   theme: "promptLensTheme",
   auth: "promptLensAuth"
@@ -238,6 +249,7 @@ let state = {
   selectedMode: "auto",
   selectedCategory: "全部",
   toolMode: "create",
+  conversation: [],
   currentResult: emptyResult(),
   activeTab: "prompt"
 };
@@ -250,6 +262,8 @@ function emptyResult() {
     variants: [],
     mode: "auto",
     score: 0,
+    scoreExplanation: "",
+    questions: [],
     metrics: { clarity: 0, context: 0, constraint: 0, format: 0, action: 0 }
   };
 }
@@ -268,6 +282,28 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getCustomTemplates() {
+  return readJSON(store.customTemplates, []);
+}
+
+function setCustomTemplates(items) {
+  writeJSON(store.customTemplates, items.slice(0, 40));
+  mergeCustomTemplates();
+  renderTemplates();
+  renderWorkspaceSummary();
+}
+
+function mergeCustomTemplates() {
+  templates = templates.filter((item) => !item.custom);
+  const existingIds = new Set(templates.map((item) => item.id));
+  getCustomTemplates().forEach((template) => {
+    if (!existingIds.has(template.id)) {
+      templates.unshift(template);
+      existingIds.add(template.id);
+    }
+  });
 }
 
 function getAuthState() {
@@ -303,6 +339,8 @@ function normalizeServerItem(item) {
     image: item.image || "",
     variants: item.variants || [],
     score: item.score || 0,
+    scoreExplanation: item.scoreExplanation || "",
+    questions: item.questions || [],
     createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("zh-CN", { hour12: false }) : new Date().toLocaleString("zh-CN", { hour12: false })
   };
 }
@@ -486,12 +524,15 @@ function buildPrompt(text, options) {
   const prompt = sections.join("\n\n");
   const metrics = calculateMetrics(text, options, mode);
   const score = Math.round(Object.values(metrics).reduce((sum, value) => sum + value, 0) / 5);
+  const scoreExplanation = buildScoreExplanation(text, options, mode, metrics);
   return {
     mode,
     prompt,
     blueprint: buildBlueprint(text, mode, options),
     image: buildImagePanel(text, mode, options),
     variants: buildVariants(text, mode, options),
+    scoreExplanation,
+    questions: generateClarifyingQuestions(text, mode),
     score,
     metrics
   };
@@ -653,6 +694,8 @@ function normalizeResultText(result) {
     prompt: plainTextBlock(result.prompt),
     blueprint: plainTextBlock(result.blueprint),
     image: plainTextBlock(result.image),
+    scoreExplanation: plainTextBlock(result.scoreExplanation),
+    questions: Array.isArray(result.questions) ? result.questions : [],
     variants: (result.variants || []).map((variant) => ({
       ...variant,
       content: plainTextBlock(variant.content)
@@ -685,6 +728,37 @@ function buildImprovementTips(text, options, mode) {
   if (mode === "analysis") tips.push("明确指标口径、时间范围、数据来源和决策目标");
   if (options.format === "plain") tips.push("复杂任务建议改为结构化或步骤清单");
   return tips.length ? tips : ["当前需求已经具备较好的结构，可以继续增加反例或验收标准"];
+}
+
+function buildScoreExplanation(text, options, mode, metrics) {
+  const labels = {
+    clarity: "清晰度",
+    context: "上下文",
+    constraint: "约束",
+    format: "格式",
+    action: "可执行"
+  };
+  const weakest = Object.entries(metrics)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 2)
+    .map(([key, value]) => `${labels[key]} ${value} 分`)
+    .join("，");
+  const strengths = Object.entries(metrics)
+    .filter(([, value]) => value >= 78)
+    .map(([key]) => labels[key]);
+  const tips = buildImprovementTips(text, options, mode);
+  return [
+    "评分解释：",
+    `当前分数主要由清晰度、上下文、约束、格式和可执行性共同决定。`,
+    `相对短板：${weakest || "暂无明显短板"}。`,
+    `优势项：${strengths.length ? strengths.join("、") : "还没有特别突出的维度"}。`,
+    "",
+    "提升建议：",
+    textList(tips),
+    "",
+    "下一步：",
+    "先补齐最关键的缺失信息，再点击“生成精准提示词”或使用“对话式优化”。"
+  ].join("\n");
 }
 
 function generateClarifyingQuestions(text, mode) {
@@ -739,6 +813,68 @@ function applyClarifications() {
   showToast("已应用补充信息");
 }
 
+function renderConversationQuestions(questions = []) {
+  if (state.conversation.length || !questions.length) return;
+  elements.conversationList.innerHTML = `
+    <div class="chat-message assistant">我建议先确认这些关键信息：${escapeHtml(questions.slice(0, 3).join("；"))}</div>
+  `;
+}
+
+function renderConversation() {
+  if (!state.conversation.length) {
+    elements.conversationList.innerHTML = `<div class="chat-message assistant">输入需求后点击“开始追问”，系统会先问关键问题，再生成最终提示词。</div>`;
+    return;
+  }
+  elements.conversationList.innerHTML = state.conversation.map((message) => `
+    <div class="chat-message ${message.role}">
+      ${escapeHtml(message.content)}
+    </div>
+  `).join("");
+  elements.conversationList.scrollTop = elements.conversationList.scrollHeight;
+}
+
+function startConversationFlow() {
+  const text = normalizeText(elements.userInput.value);
+  if (!text) {
+    showToast("请先输入需求");
+    return;
+  }
+  const mode = getActiveMode(text);
+  const questions = generateClarifyingQuestions(text, mode);
+  state.conversation = [
+    { role: "user", content: text },
+    { role: "assistant", content: `我会先追问关键缺口：${questions.join("；")}` }
+  ];
+  renderConversation();
+  elements.conversationReply.focus();
+}
+
+function sendConversationReply() {
+  const reply = normalizeText(elements.conversationReply.value);
+  if (!reply) {
+    showToast("请先回答追问");
+    return;
+  }
+  if (!state.conversation.length) startConversationFlow();
+  state.conversation.push({ role: "user", content: reply });
+  const addition = [
+    "",
+    "对话补充：",
+    ...state.conversation
+      .filter((message) => message.role === "user")
+      .slice(1)
+      .map((message, index) => `（${index + 1}）${message.content}`)
+  ].join("\n");
+  const base = elements.userInput.value.replace(/\n\n对话补充：[\s\S]*$/g, "").trim();
+  elements.userInput.value = `${base}${addition}`;
+  elements.conversationReply.value = "";
+  state.conversation.push({ role: "assistant", content: "已吸收补充信息，并重新生成最终提示词。" });
+  elements.charCount.textContent = elements.userInput.value.length;
+  renderConversation();
+  generate({ count: true });
+  showToast("已用对话内容优化");
+}
+
 function renderAuth() {
   const auth = getAuthState();
   if (auth.user) {
@@ -756,6 +892,19 @@ function renderAuth() {
     elements.registerBtn.classList.remove("hidden");
     elements.logoutBtn.classList.add("hidden");
   }
+  renderWorkspaceSummary();
+}
+
+function renderWorkspaceSummary() {
+  const customCount = getCustomTemplates().length;
+  const values = [
+    { value: getHistory().length, label: "历史" },
+    { value: getFavorites().length, label: "收藏" },
+    { value: customCount, label: "模板" }
+  ];
+  elements.workspaceSummary.innerHTML = values.map((item) => `
+    <div><b>${item.value}</b><span>${item.label}</span></div>
+  `).join("");
 }
 
 async function registerAccount() {
@@ -820,12 +969,19 @@ async function loadCloudData() {
   const auth = getAuthState();
   if (!auth.token) return;
   try {
-    const [prompts, favorites] = await Promise.all([
+    const [prompts, favorites, dashboard] = await Promise.all([
       apiRequest("/api/prompts"),
-      apiRequest("/api/favorites")
+      apiRequest("/api/favorites"),
+      apiRequest("/api/dashboard").catch(() => null)
     ]);
     setHistory((prompts.prompts || []).map(normalizeServerItem));
     setFavorites((favorites.favorites || []).map(normalizeServerItem));
+    if (dashboard?.templates?.length) {
+      const local = getCustomTemplates();
+      const localIds = new Set(local.map((item) => item.id));
+      const merged = [...dashboard.templates.filter((item) => !localIds.has(item.id)), ...local];
+      setCustomTemplates(merged);
+    }
   } catch (error) {
     showToast("云端数据加载失败");
   }
@@ -837,6 +993,7 @@ function renderResult(result) {
   elements.resultPrompt.textContent = normalized.prompt;
   elements.resultBlueprint.textContent = normalized.blueprint;
   elements.resultImage.textContent = normalized.image;
+  elements.resultScore.textContent = normalized.scoreExplanation || buildScoreExplanation(normalizeText(elements.userInput.value), collectOptions(), normalized.mode, normalized.metrics);
   elements.scoreValue.textContent = normalized.score;
   elements.barClarity.style.width = `${normalized.metrics.clarity || 0}%`;
   elements.barContext.style.width = `${normalized.metrics.context || 0}%`;
@@ -845,6 +1002,7 @@ function renderResult(result) {
   elements.barAction.style.width = `${normalized.metrics.action || 0}%`;
   elements.modeStatus.textContent = modeNames[normalized.mode] || modeNames.auto;
   renderVariants(normalized.variants);
+  renderConversationQuestions(normalized.questions);
 }
 
 function renderVariants(variants) {
@@ -892,7 +1050,8 @@ async function runAIEnhance() {
         options: collectOptions(),
         mode: getActiveMode(text),
         model: settings.aiModel,
-        workspace: settings.workspaceName || ""
+        workspace: settings.workspaceName || "",
+        conversation: state.conversation
       })
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -904,6 +1063,9 @@ async function runAIEnhance() {
       blueprint: data.blueprint || fallback.blueprint,
       image: data.image || fallback.image,
       variants: Array.isArray(data.variants) ? data.variants : fallback.variants,
+      metrics: data.metrics || fallback.metrics,
+      scoreExplanation: data.scoreExplanation || fallback.scoreExplanation,
+      questions: Array.isArray(data.questions) ? data.questions : fallback.questions,
       score: data.score || fallback.score
     };
     renderResult(result);
@@ -1076,6 +1238,48 @@ async function loadServerTemplates() {
   }
 }
 
+async function saveCustomTemplate() {
+  const title = elements.customTemplateTitle.value.trim();
+  const category = elements.customTemplateCategory.value.trim() || "自定义";
+  const prompt = elements.customTemplatePrompt.value.trim();
+  if (!title || !prompt) {
+    showToast("请填写模板名称和内容");
+    return;
+  }
+  const template = {
+    id: `local_tpl_${Date.now()}`,
+    title,
+    category,
+    mode: state.selectedMode === "auto" ? getActiveMode(prompt) : state.selectedMode,
+    targetAI: elements.targetAI.value,
+    tone: elements.tone.value,
+    format: elements.format.value,
+    prompt,
+    custom: true,
+    createdAt: new Date().toISOString()
+  };
+  const auth = getAuthState();
+  let savedTemplate = template;
+  if (auth.token) {
+    try {
+      const data = await apiRequest("/api/templates", {
+        method: "POST",
+        body: JSON.stringify(template)
+      });
+      savedTemplate = data.template || template;
+      showToast("自定义模板已保存到云端");
+    } catch (error) {
+      showToast("云端保存失败，已保存到本地");
+    }
+  } else {
+    showToast("自定义模板已保存到本地");
+  }
+  setCustomTemplates([savedTemplate, ...getCustomTemplates().filter((item) => item.title !== title)]);
+  elements.customTemplateTitle.value = "";
+  elements.customTemplateCategory.value = "";
+  elements.customTemplatePrompt.value = "";
+}
+
 function applyTemplate(id) {
   const template = templates.find((item) => item.id === id);
   if (!template) return;
@@ -1097,6 +1301,7 @@ function getHistory() {
 function setHistory(items) {
   writeJSON(store.history, items.slice(0, 24));
   renderHistory();
+  renderWorkspaceSummary();
 }
 
 async function saveCurrentHistory() {
@@ -1136,6 +1341,8 @@ function buildSavedItem(source) {
     image: state.currentResult.image,
     variants: state.currentResult.variants,
     score: state.currentResult.score,
+    scoreExplanation: state.currentResult.scoreExplanation,
+    questions: state.currentResult.questions,
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
   };
 }
@@ -1152,6 +1359,7 @@ function setFavorites(items) {
   writeJSON(store.favorites, items.slice(0, 24));
   renderFavorites();
   renderStats();
+  renderWorkspaceSummary();
 }
 
 async function favoriteCurrentPrompt() {
@@ -1209,6 +1417,8 @@ function restoreSaved(id) {
     blueprint: item.blueprint,
     image: item.image,
     variants: item.variants || [],
+    scoreExplanation: item.scoreExplanation || "",
+    questions: item.questions || [],
     mode: item.mode,
     score: item.score,
     metrics: calculateMetrics(item.source, collectOptions(), item.mode)
@@ -1289,7 +1499,26 @@ function exportFile(extension) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+  recordExport(extension);
   showToast(`已导出 ${extension.toUpperCase()}`);
+}
+
+async function recordExport(extension) {
+  const auth = getAuthState();
+  if (!auth.token) return;
+  try {
+    await apiRequest("/api/exports", {
+      method: "POST",
+      body: JSON.stringify({
+        extension,
+        source: normalizeText(elements.userInput.value),
+        score: state.currentResult.score
+      })
+    });
+    renderWorkspaceSummary();
+  } catch (error) {
+    // Export file already succeeded; cloud export log is optional.
+  }
 }
 
 function shareCurrentPrompt() {
@@ -1391,6 +1620,7 @@ function bindEvents() {
   });
 
   elements.templateSearch.addEventListener("input", renderTemplates);
+  elements.saveCustomTemplate.addEventListener("click", saveCustomTemplate);
   elements.categoryFilters.addEventListener("click", (event) => {
     const button = event.target.closest("[data-category]");
     if (!button) return;
@@ -1465,6 +1695,11 @@ function bindEvents() {
     showToast("追问已刷新");
   });
   elements.applyClarifications.addEventListener("click", applyClarifications);
+  elements.startConversation.addEventListener("click", startConversationFlow);
+  elements.sendConversationReply.addEventListener("click", sendConversationReply);
+  elements.conversationReply.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) sendConversationReply();
+  });
   elements.generateBtn.addEventListener("click", () => {
     const result = generate({ count: true });
     showToast(result.prompt ? "已生成" : "请输入需求");
@@ -1623,12 +1858,14 @@ function showToast(message) {
 function init() {
   initTheme();
   bindEvents();
+  mergeCustomTemplates();
   renderSettings();
   renderAuth();
   renderTemplates();
   renderHistory();
   renderFavorites();
   renderStats();
+  renderWorkspaceSummary();
   updateDetailLabel();
   renderClarifications();
   restoreFromShare();

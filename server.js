@@ -7,6 +7,9 @@ const root = __dirname;
 const dataDir = path.join(root, "data");
 const dbPath = path.join(dataDir, "db.json");
 const port = Number(process.env.PORT || 8787);
+const databaseUrl = process.env.DATABASE_URL || "";
+let dbReady = null;
+let pgPool = null;
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -55,29 +58,83 @@ const defaultTemplates = [
   }
 ];
 
-function ensureDb() {
-  fs.mkdirSync(dataDir, { recursive: true });
-  if (!fs.existsSync(dbPath)) {
-    writeDb({
-      users: [],
-      sessions: [],
-      prompts: [],
-      favorites: [],
-      templates: defaultTemplates,
-      events: []
-    });
+function createDefaultDb() {
+  return {
+    users: [],
+    sessions: [],
+    prompts: [],
+    favorites: [],
+    templates: defaultTemplates,
+    exports: [],
+    events: []
+  };
+}
+
+function normalizeDb(db) {
+  const base = createDefaultDb();
+  const next = { ...base, ...(db || {}) };
+  next.users = Array.isArray(next.users) ? next.users : [];
+  next.sessions = Array.isArray(next.sessions) ? next.sessions : [];
+  next.prompts = Array.isArray(next.prompts) ? next.prompts : [];
+  next.favorites = Array.isArray(next.favorites) ? next.favorites : [];
+  next.templates = Array.isArray(next.templates) && next.templates.length ? next.templates : defaultTemplates;
+  next.exports = Array.isArray(next.exports) ? next.exports : [];
+  next.events = Array.isArray(next.events) ? next.events : [];
+  return next;
+}
+
+async function ensureDb() {
+  if (dbReady) return dbReady;
+  dbReady = (async () => {
+    if (databaseUrl) {
+      const { Pool } = require("pg");
+      pgPool = new Pool({
+        connectionString: databaseUrl,
+        ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false }
+      });
+      await pgPool.query(`
+        CREATE TABLE IF NOT EXISTS promptlens_store (
+          id TEXT PRIMARY KEY,
+          data JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      await pgPool.query(
+        "INSERT INTO promptlens_store (id, data) VALUES ($1, $2::jsonb) ON CONFLICT (id) DO NOTHING",
+        ["main", JSON.stringify(createDefaultDb())]
+      );
+      return;
+    }
+
+    fs.mkdirSync(dataDir, { recursive: true });
+    if (!fs.existsSync(dbPath)) {
+      await writeDb(createDefaultDb());
+    }
+  })();
+  return dbReady;
+}
+
+async function readDb() {
+  await ensureDb();
+  if (pgPool) {
+    const result = await pgPool.query("SELECT data FROM promptlens_store WHERE id = $1", ["main"]);
+    return normalizeDb(result.rows[0]?.data);
   }
+  return normalizeDb(JSON.parse(fs.readFileSync(dbPath, "utf8")));
 }
 
-function readDb() {
-  ensureDb();
-  return JSON.parse(fs.readFileSync(dbPath, "utf8"));
-}
-
-function writeDb(db) {
+async function writeDb(db) {
+  const normalized = normalizeDb(db);
+  if (pgPool) {
+    await pgPool.query(
+      "UPDATE promptlens_store SET data = $2::jsonb, updated_at = NOW() WHERE id = $1",
+      ["main", JSON.stringify(normalized)]
+    );
+    return;
+  }
   fs.mkdirSync(dataDir, { recursive: true });
   const tmpPath = `${dbPath}.tmp`;
-  fs.writeFileSync(tmpPath, JSON.stringify(db, null, 2), "utf8");
+  fs.writeFileSync(tmpPath, JSON.stringify(normalized, null, 2), "utf8");
   fs.renameSync(tmpPath, dbPath);
 }
 
@@ -175,16 +232,24 @@ function track(db, type, data = {}) {
 }
 
 async function handleApi(req, res, url) {
-  const db = readDb();
+  const db = await readDb();
   const method = req.method || "GET";
 
   if (method === "GET" && url.pathname === "/api/health") {
-    sendJson(res, 200, { ok: true, dynamic: true, time: new Date().toISOString() });
+    sendJson(res, 200, {
+      ok: true,
+      dynamic: true,
+      database: pgPool ? "postgres" : "json",
+      ai: Boolean(process.env.OPENAI_API_KEY),
+      time: new Date().toISOString()
+    });
     return;
   }
 
   if (method === "GET" && url.pathname === "/api/templates") {
-    sendJson(res, 200, { templates: db.templates });
+    const auth = getAuth(req, db);
+    const templates = db.templates.filter((item) => !item.userId || item.userId === auth?.user.id);
+    sendJson(res, 200, { templates });
     return;
   }
 
@@ -224,7 +289,7 @@ async function handleApi(req, res, url) {
     db.users.push(user);
     db.sessions.push({ token, userId: user.id, expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 14 });
     track(db, "registered", { userId: user.id });
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { user: publicUser(user), token });
     return;
   }
@@ -241,7 +306,7 @@ async function handleApi(req, res, url) {
     const token = createId("ses");
     db.sessions.push({ token, userId: user.id, expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 14 });
     track(db, "login", { userId: user.id });
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, { user: publicUser(user), token });
     return;
   }
@@ -250,7 +315,7 @@ async function handleApi(req, res, url) {
     const auth = getAuth(req, db);
     if (auth) {
       db.sessions = db.sessions.filter((session) => session.token !== auth.session.token);
-      writeDb(db);
+      await writeDb(db);
     }
     sendJson(res, 200, { ok: true });
     return;
@@ -282,13 +347,15 @@ async function handleApi(req, res, url) {
       blueprint: String(body.blueprint || "").slice(0, 12000),
       image: String(body.image || "").slice(0, 12000),
       variants: Array.isArray(body.variants) ? body.variants.slice(0, 8) : [],
+      scoreExplanation: String(body.scoreExplanation || "").slice(0, 12000),
+      questions: Array.isArray(body.questions) ? body.questions.slice(0, 8) : [],
       mode: String(body.mode || "qa"),
       score: Number(body.score || 0),
       createdAt: new Date().toISOString()
     };
     db.prompts.unshift(item);
     track(db, "generated", { userId: auth.user.id, promptId: item.id });
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { prompt: item });
     return;
   }
@@ -312,14 +379,89 @@ async function handleApi(req, res, url) {
       blueprint: String(body.blueprint || "").slice(0, 12000),
       image: String(body.image || "").slice(0, 12000),
       variants: Array.isArray(body.variants) ? body.variants.slice(0, 8) : [],
+      scoreExplanation: String(body.scoreExplanation || "").slice(0, 12000),
+      questions: Array.isArray(body.questions) ? body.questions.slice(0, 8) : [],
       mode: String(body.mode || "qa"),
       score: Number(body.score || 0),
       createdAt: new Date().toISOString()
     };
     db.favorites.unshift(item);
     track(db, "favorite", { userId: auth.user.id, favoriteId: item.id });
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 201, { favorite: item });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/templates") {
+    const auth = requireAuth(req, res, db);
+    if (!auth) return;
+    const body = await readBody(req);
+    const title = String(body.title || "").trim();
+    const prompt = String(body.prompt || "").trim();
+    if (!title || !prompt) {
+      sendError(res, 400, "Template title and prompt are required");
+      return;
+    }
+    const template = {
+      id: createId("tpl"),
+      userId: auth.user.id,
+      title: title.slice(0, 80),
+      category: String(body.category || "自定义").trim().slice(0, 24) || "自定义",
+      mode: String(body.mode || "qa"),
+      targetAI: String(body.targetAI || "chat"),
+      tone: String(body.tone || "professional"),
+      format: String(body.format || "structured"),
+      prompt: prompt.slice(0, 8000),
+      custom: true,
+      createdAt: new Date().toISOString()
+    };
+    db.templates.unshift(template);
+    track(db, "template_created", { userId: auth.user.id, templateId: template.id });
+    await writeDb(db);
+    sendJson(res, 201, { template });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/dashboard") {
+    const auth = requireAuth(req, res, db);
+    if (!auth) return;
+    const userId = auth.user.id;
+    const prompts = db.prompts.filter((item) => item.userId === userId);
+    const favorites = db.favorites.filter((item) => item.userId === userId);
+    const customTemplates = db.templates.filter((item) => item.userId === userId);
+    const exports = db.exports.filter((item) => item.userId === userId);
+    sendJson(res, 200, {
+      user: publicUser(auth.user),
+      counts: {
+        prompts: prompts.length,
+        favorites: favorites.length,
+        templates: customTemplates.length,
+        exports: exports.length
+      },
+      recent: prompts.slice(0, 6),
+      templates: customTemplates.slice(0, 12),
+      exports: exports.slice(0, 12)
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/exports") {
+    const auth = requireAuth(req, res, db);
+    if (!auth) return;
+    const body = await readBody(req);
+    const item = {
+      id: createId("exp"),
+      userId: auth.user.id,
+      extension: String(body.extension || "txt").slice(0, 12),
+      source: String(body.source || "").slice(0, 1000),
+      score: Number(body.score || 0),
+      createdAt: new Date().toISOString()
+    };
+    db.exports.unshift(item);
+    db.exports = db.exports.slice(0, 500);
+    track(db, "exported", { userId: auth.user.id, extension: item.extension });
+    await writeDb(db);
+    sendJson(res, 201, { export: item });
     return;
   }
 
@@ -332,7 +474,7 @@ async function handleApi(req, res, url) {
     }
     const result = await optimizeWithAi(input, body);
     track(db, "ai_optimize", { mode: body.mode || "auto", ai: result.ai });
-    writeDb(db);
+    await writeDb(db);
     sendJson(res, 200, result);
     return;
   }
@@ -343,12 +485,18 @@ async function handleApi(req, res, url) {
 async function optimizeWithAi(input, body) {
   const apiKey = process.env.OPENAI_API_KEY;
   const prompt = buildFallbackPrompt(input, body);
+  const fallbackScore = scorePrompt(input, body);
+  const fallbackQuestions = buildClarifyingQuestions(input, body.mode || "auto");
+  const fallbackExplanation = buildScoreExplanation(fallbackScore.metrics, input, body.options || {});
   if (!apiKey) {
     return {
       ai: false,
       prompt,
       blueprint: "后端已启用，但未配置 OPENAI_API_KEY，因此返回服务端规则增强结果。",
-      score: 88,
+      score: fallbackScore.score,
+      metrics: fallbackScore.metrics,
+      scoreExplanation: fallbackExplanation,
+      questions: fallbackQuestions,
       variants: [
         { title: "商用专业版", note: "服务端规则增强", content: prompt },
         { title: "追问优先版", note: "适合需求不完整时", content: `${prompt}\n\n如果信息不足，请先提出 3 个最关键的澄清问题。` }
@@ -356,8 +504,16 @@ async function optimizeWithAi(input, body) {
     };
   }
 
+  const modelLabel = String(body.model || "auto");
+  const modelMap = {
+    auto: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    fast: process.env.OPENAI_FAST_MODEL || process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    pro: process.env.OPENAI_PRO_MODEL || process.env.OPENAI_MODEL || "gpt-4.1",
+    creative: process.env.OPENAI_CREATIVE_MODEL || process.env.OPENAI_MODEL || "gpt-4.1"
+  };
+  const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const payload = {
-    model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    model: modelMap[modelLabel] || modelMap.auto,
     messages: [
       { role: "system", content: "You refine user requests into precise production-grade AI prompts. Return JSON only. Use plain text in all user-facing fields, not Markdown. Do not use # headings, Markdown bullets, code fences, or table syntax." },
       {
@@ -366,11 +522,14 @@ async function optimizeWithAi(input, body) {
           input,
           mode: body.mode || "auto",
           options: body.options || {},
+          conversation: Array.isArray(body.conversation) ? body.conversation.slice(-12) : [],
           formattingRule: "所有面向用户的内容都使用普通文本。小标题使用“标题：”，列表使用中文编号“（1）（2）（3）”，不要使用 Markdown。",
           requestedShape: {
             prompt: "完整优化提示词，普通文本格式",
             blueprint: "结构拆解，普通文本格式",
             score: "0-100",
+            scoreExplanation: "评分解释，说明为什么是这个分数以及如何提高",
+            questions: ["需要追问用户的关键问题，最多 5 个"],
             variants: [{ title: "版本名", note: "适用场景", content: "提示词内容，普通文本格式" }]
           }
         })
@@ -381,7 +540,7 @@ async function optimizeWithAi(input, body) {
   };
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -396,7 +555,10 @@ async function optimizeWithAi(input, body) {
       ai: true,
       prompt: parsed.prompt || prompt,
       blueprint: parsed.blueprint || "AI 已生成优化结果。",
-      score: Number(parsed.score || 92),
+      score: Number(parsed.score || fallbackScore.score),
+      metrics: fallbackScore.metrics,
+      scoreExplanation: parsed.scoreExplanation || fallbackExplanation,
+      questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, 5) : fallbackQuestions,
       variants: Array.isArray(parsed.variants) ? parsed.variants : []
     };
   } catch (error) {
@@ -404,10 +566,69 @@ async function optimizeWithAi(input, body) {
       ai: false,
       prompt,
       blueprint: `AI 调用失败，已返回服务端规则增强结果：${error.message}`,
-      score: 84,
+      score: fallbackScore.score,
+      metrics: fallbackScore.metrics,
+      scoreExplanation: fallbackExplanation,
+      questions: fallbackQuestions,
       variants: [{ title: "备用版", note: "AI 不可用时返回", content: prompt }]
     };
   }
+}
+
+function scorePrompt(input, body) {
+  const options = body.options || {};
+  const text = String(input || "");
+  const metrics = {
+    clarity: clamp(38 + Math.min(38, Math.round(text.length / 3)) + (/[。,.，；;]/.test(text) ? 8 : 0), 0, 100),
+    context: clamp(34 + (text.length > 48 ? 24 : 8) + (options.detail || 3) * 7, 0, 100),
+    constraint: clamp(36 + (options.includeConstraints === false ? 0 : 22) + (/[0-9一二三四五六七八九十]/.test(text) ? 12 : 0), 0, 100),
+    format: clamp(40 + (options.includeFormat === false ? 0 : 24) + (options.format && options.format !== "plain" ? 14 : 4), 0, 100),
+    action: clamp(42 + (text.length > 24 ? 18 : 8) + (options.includeChecklist === false ? 0 : 14), 0, 100)
+  };
+  const score = Math.round(Object.values(metrics).reduce((sum, value) => sum + value, 0) / 5);
+  return { score, metrics };
+}
+
+function buildScoreExplanation(metrics, input, options) {
+  const weakest = Object.entries(metrics).sort((a, b) => a[1] - b[1]).slice(0, 2);
+  const tips = [];
+  if (String(input).length < 40) tips.push("原始需求偏短，建议补充目标用户、使用场景和成功标准。");
+  if (!/[0-9一二三四五六七八九十]/.test(input)) tips.push("缺少数量、时间、尺寸、篇幅或验收指标，建议加入可衡量约束。");
+  if (options.format === "plain") tips.push("当前输出格式偏自然段，复杂任务建议改成结构化或步骤清单。");
+  if (!tips.length) tips.push("当前需求结构较完整，下一步可以补充反例、边界条件或交付验收标准。");
+  return [
+    "评分解释：",
+    `当前短板：${weakest.map(([key, value]) => `${metricLabel(key)} ${value} 分`).join("，")}。`,
+    "改进建议：",
+    ...tips.map((item, index) => `（${index + 1}）${item}`)
+  ].join("\n");
+}
+
+function buildClarifyingQuestions(input, mode) {
+  const common = ["这个结果主要给谁使用？", "最终输出需要达到什么验收标准？", "有没有必须避免的内容、风格或限制？"];
+  const byMode = {
+    code: ["需要哪些页面、模块和数据字段？", "准备部署到哪个平台，是否需要移动端适配？"],
+    image: ["主体、场景、镜头、光线和画幅分别是什么？", "要偏真实摄影、商业海报还是概念插画？"],
+    writing: ["目标读者是谁，发布渠道是什么？", "需要多长篇幅，是否有固定结构或禁用表达？"],
+    analysis: ["分析的时间范围、核心指标和数据来源是什么？", "这个分析最终要支持什么决策？"],
+    qa: ["你更需要结论、原因、步骤还是方案？", "希望回答到什么深度？"]
+  };
+  const detected = mode === "auto" ? (/(网站|系统|代码|开发|页面)/.test(input) ? "code" : "qa") : mode;
+  return [...common, ...(byMode[detected] || byMode.qa)].slice(0, 5);
+}
+
+function metricLabel(key) {
+  return {
+    clarity: "清晰度",
+    context: "上下文",
+    constraint: "约束",
+    format: "格式",
+    action: "可执行"
+  }[key] || key;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function buildFallbackPrompt(input, body) {
@@ -468,7 +689,13 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(port, () => {
-  ensureDb();
-  console.log(`PromptLens dynamic server running at http://localhost:${port}`);
-});
+ensureDb()
+  .then(() => {
+    server.listen(port, () => {
+      console.log(`PromptLens dynamic server running at http://localhost:${port}`);
+    });
+  })
+  .catch((error) => {
+    console.error("PromptLens failed to initialize storage:", error);
+    process.exit(1);
+  });
