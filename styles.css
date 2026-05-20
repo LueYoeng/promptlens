@@ -486,6 +486,30 @@ select {
   min-height: 42px;
 }
 
+.auth-status {
+  display: grid;
+  gap: 4px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
+}
+
+.auth-status b {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.auth-status span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.hidden {
+  display: none !important;
+}
+
 .mini-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

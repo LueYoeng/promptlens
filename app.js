@@ -9,6 +9,15 @@ const elements = {
   helpDialog: $("#helpDialog"),
   closeHelp: $("#closeHelp"),
   closeHelpFooter: $("#closeHelpFooter"),
+  authName: $("#authName"),
+  authEmail: $("#authEmail"),
+  authFields: $("#authFields"),
+  authNameInput: $("#authNameInput"),
+  authEmailInput: $("#authEmailInput"),
+  authPasswordInput: $("#authPasswordInput"),
+  loginBtn: $("#loginBtn"),
+  registerBtn: $("#registerBtn"),
+  logoutBtn: $("#logoutBtn"),
   modeStatus: $("#modeStatus"),
   statGenerated: $("#statGenerated"),
   statFavorites: $("#statFavorites"),
@@ -74,7 +83,8 @@ const store = {
   favorites: "promptLensFavorites",
   settings: "promptLensSettings",
   stats: "promptLensStats",
-  theme: "promptLensTheme"
+  theme: "promptLensTheme",
+  auth: "promptLensAuth"
 };
 
 const detailLabels = ["极简", "简洁", "标准", "精细", "专家级"];
@@ -120,7 +130,7 @@ const profiles = {
   }
 };
 
-const templates = [
+let templates = [
   {
     id: "saas-dashboard",
     title: "网站系统开发",
@@ -258,6 +268,43 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getAuthState() {
+  return readJSON(store.auth, { token: "", user: null });
+}
+
+function setAuthState(next) {
+  writeJSON(store.auth, next);
+  renderAuth();
+}
+
+function apiRequest(path, options = {}) {
+  const auth = getAuthState();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+  if (auth.token) headers.Authorization = `Bearer ${auth.token}`;
+  return fetch(path, { ...options, headers }).then(async (response) => {
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    return data;
+  });
+}
+
+function normalizeServerItem(item) {
+  return {
+    id: item.id || Date.now(),
+    mode: item.mode || "qa",
+    source: item.source || "",
+    prompt: item.prompt || "",
+    blueprint: item.blueprint || "",
+    image: item.image || "",
+    variants: item.variants || [],
+    score: item.score || 0,
+    createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("zh-CN", { hour12: false }) : new Date().toLocaleString("zh-CN", { hour12: false })
+  };
 }
 
 function detectMode(text) {
@@ -630,6 +677,98 @@ function applyClarifications() {
   showToast("已应用补充信息");
 }
 
+function renderAuth() {
+  const auth = getAuthState();
+  if (auth.user) {
+    elements.authName.textContent = auth.user.name || "已登录用户";
+    elements.authEmail.textContent = `${auth.user.email} · ${auth.user.plan || "free"}`;
+    elements.authFields.classList.add("hidden");
+    elements.loginBtn.classList.add("hidden");
+    elements.registerBtn.classList.add("hidden");
+    elements.logoutBtn.classList.remove("hidden");
+  } else {
+    elements.authName.textContent = "访客模式";
+    elements.authEmail.textContent = "登录后可云端保存历史和收藏";
+    elements.authFields.classList.remove("hidden");
+    elements.loginBtn.classList.remove("hidden");
+    elements.registerBtn.classList.remove("hidden");
+    elements.logoutBtn.classList.add("hidden");
+  }
+}
+
+async function registerAccount() {
+  try {
+    const data = await apiRequest("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: elements.authNameInput.value.trim(),
+        email: elements.authEmailInput.value.trim(),
+        password: elements.authPasswordInput.value
+      })
+    });
+    setAuthState({ token: data.token, user: data.user });
+    await loadCloudData();
+    showToast("注册并登录成功");
+  } catch (error) {
+    showToast(error.message || "注册失败");
+  }
+}
+
+async function loginAccount() {
+  try {
+    const data = await apiRequest("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: elements.authEmailInput.value.trim(),
+        password: elements.authPasswordInput.value
+      })
+    });
+    setAuthState({ token: data.token, user: data.user });
+    await loadCloudData();
+    showToast("登录成功");
+  } catch (error) {
+    showToast(error.message || "登录失败");
+  }
+}
+
+async function logoutAccount() {
+  try {
+    await apiRequest("/api/auth/logout", { method: "POST", body: "{}" });
+  } catch (error) {
+    // Local logout still matters if the session is already expired.
+  }
+  setAuthState({ token: "", user: null });
+  showToast("已退出登录");
+}
+
+async function restoreSession() {
+  const auth = getAuthState();
+  renderAuth();
+  if (!auth.token) return;
+  try {
+    const data = await apiRequest("/api/me");
+    setAuthState({ token: auth.token, user: data.user });
+    await loadCloudData();
+  } catch (error) {
+    setAuthState({ token: "", user: null });
+  }
+}
+
+async function loadCloudData() {
+  const auth = getAuthState();
+  if (!auth.token) return;
+  try {
+    const [prompts, favorites] = await Promise.all([
+      apiRequest("/api/prompts"),
+      apiRequest("/api/favorites")
+    ]);
+    setHistory((prompts.prompts || []).map(normalizeServerItem));
+    setFavorites((favorites.favorites || []).map(normalizeServerItem));
+  } catch (error) {
+    showToast("云端数据加载失败");
+  }
+}
+
 function renderResult(result) {
   state.currentResult = result;
   elements.resultPrompt.textContent = result.prompt;
@@ -677,15 +816,12 @@ async function runAIEnhance() {
     showToast("请输入需求");
     return;
   }
-  if (!settings.enableAI || !settings.aiEndpoint) {
-    showToast("请先启用 AI 并填写后端地址");
-    return;
-  }
+  const endpoint = settings.aiEndpoint || "/api/optimize";
 
   elements.aiStatus.textContent = "AI 增强中";
   elements.aiEnhanceBtn.disabled = true;
   try {
-    const response = await fetch(settings.aiEndpoint, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -769,21 +905,18 @@ function renderSettings() {
   elements.aiEndpoint.value = settings.aiEndpoint || "";
   elements.aiModel.value = settings.aiModel || "auto";
   elements.syncStatus.textContent = settings.syncEndpoint ? "云端同步已配置" : "本地历史已启用";
-  elements.aiStatus.textContent = settings.enableAI && settings.aiEndpoint ? "AI 后端已配置" : "本地规则引擎";
+  elements.aiStatus.textContent = settings.aiEndpoint ? "自定义 AI 后端已配置" : "动态后端 /api/optimize";
 }
 
 async function testAIConnection() {
   const settings = saveSettings();
-  if (!settings.aiEndpoint) {
-    showToast("请填写 AI 后端地址");
-    return;
-  }
+  const endpoint = settings.aiEndpoint || "/api/health";
   elements.aiStatus.textContent = "测试连接中";
   try {
-    const response = await fetch(settings.aiEndpoint, {
-      method: "POST",
+    const response = await fetch(endpoint, {
+      method: endpoint === "/api/health" ? "GET" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ping: true, model: settings.aiModel })
+      body: endpoint === "/api/health" ? undefined : JSON.stringify({ ping: true, model: settings.aiModel })
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     elements.aiStatus.textContent = "AI 后端可用";
@@ -796,8 +929,28 @@ async function testAIConnection() {
 
 async function syncHistory() {
   const settings = saveSettings();
+  const auth = getAuthState();
+  if (!settings.syncEndpoint && auth.token) {
+    elements.syncStatus.textContent = "同步到内置后端";
+    try {
+      for (const item of getHistory().slice(0, 12)) {
+        await apiRequest("/api/prompts", { method: "POST", body: JSON.stringify(item) });
+      }
+      for (const item of getFavorites().slice(0, 12)) {
+        await apiRequest("/api/favorites", { method: "POST", body: JSON.stringify(item) });
+      }
+      await loadCloudData();
+      await refreshServerStats();
+      elements.syncStatus.textContent = "内置后端同步完成";
+      showToast("已同步到商用后端");
+    } catch (error) {
+      elements.syncStatus.textContent = "内置后端同步失败";
+      showToast("同步失败");
+    }
+    return;
+  }
   if (!settings.syncEndpoint) {
-    showToast("请填写云端同步端点");
+    showToast("请先登录，或填写云端同步端点");
     return;
   }
   elements.syncStatus.textContent = "同步中";
@@ -846,6 +999,20 @@ function renderTemplates() {
   elements.statTemplates.textContent = String(templates.length);
 }
 
+async function loadServerTemplates() {
+  try {
+    const data = await apiRequest("/api/templates");
+    if (Array.isArray(data.templates) && data.templates.length) {
+      const localIds = new Set(templates.map((item) => item.id));
+      const remoteOnly = data.templates.filter((item) => !localIds.has(item.id));
+      templates = [...templates, ...remoteOnly];
+      renderTemplates();
+    }
+  } catch (error) {
+    // GitHub Pages or offline mode keeps using bundled templates.
+  }
+}
+
 function applyTemplate(id) {
   const template = templates.find((item) => item.id === id);
   if (!template) return;
@@ -869,7 +1036,7 @@ function setHistory(items) {
   renderHistory();
 }
 
-function saveCurrentHistory() {
+async function saveCurrentHistory() {
   const source = normalizeText(elements.userInput.value);
   if (!source || !state.currentResult.prompt) {
     showToast("先生成一条提示词");
@@ -878,7 +1045,22 @@ function saveCurrentHistory() {
   const item = buildSavedItem(source);
   const next = [item, ...getHistory().filter((old) => old.source !== source)];
   setHistory(next);
-  showToast("已保存历史");
+  const auth = getAuthState();
+  if (auth.token) {
+    try {
+      await apiRequest("/api/prompts", {
+        method: "POST",
+        body: JSON.stringify(item)
+      });
+      await refreshServerStats();
+      showToast("已保存到云端历史");
+      return;
+    } catch (error) {
+      showToast("本地已保存，云端保存失败");
+      return;
+    }
+  }
+  showToast("已保存本地历史");
 }
 
 function buildSavedItem(source) {
@@ -909,7 +1091,7 @@ function setFavorites(items) {
   renderStats();
 }
 
-function favoriteCurrentPrompt() {
+async function favoriteCurrentPrompt() {
   const source = normalizeText(elements.userInput.value);
   if (!source || !state.currentResult.prompt) {
     showToast("先生成一条提示词");
@@ -918,7 +1100,22 @@ function favoriteCurrentPrompt() {
   const item = buildSavedItem(source);
   const next = [item, ...getFavorites().filter((old) => old.prompt !== item.prompt)];
   setFavorites(next);
-  showToast("已收藏");
+  const auth = getAuthState();
+  if (auth.token) {
+    try {
+      await apiRequest("/api/favorites", {
+        method: "POST",
+        body: JSON.stringify(item)
+      });
+      await refreshServerStats();
+      showToast("已收藏到云端");
+      return;
+    } catch (error) {
+      showToast("本地已收藏，云端收藏失败");
+      return;
+    }
+  }
+  showToast("已收藏到本地");
 }
 
 function renderFavorites() {
@@ -972,6 +1169,17 @@ function renderStats() {
   elements.statGenerated.textContent = String(getStats().generated || 0);
   elements.statFavorites.textContent = String(getFavorites().length);
   elements.statTemplates.textContent = String(templates.length);
+}
+
+async function refreshServerStats() {
+  try {
+    const stats = await apiRequest("/api/stats");
+    elements.statGenerated.textContent = String(stats.generated || stats.prompts || getStats().generated || 0);
+    elements.statFavorites.textContent = String(stats.favorites || getFavorites().length);
+    elements.statTemplates.textContent = String(stats.templates || templates.length);
+  } catch (error) {
+    renderStats();
+  }
 }
 
 async function copyText(text, label = "已复制") {
@@ -1134,6 +1342,12 @@ function bindEvents() {
   elements.saveWorkspace.addEventListener("click", () => {
     saveSettings();
     showToast("账户已保存");
+  });
+  elements.loginBtn.addEventListener("click", loginAccount);
+  elements.registerBtn.addEventListener("click", registerAccount);
+  elements.logoutBtn.addEventListener("click", logoutAccount);
+  elements.authPasswordInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") loginAccount();
   });
   elements.syncHistory.addEventListener("click", syncHistory);
   elements.saveAIConfig.addEventListener("click", () => {
@@ -1346,6 +1560,7 @@ function init() {
   initTheme();
   bindEvents();
   renderSettings();
+  renderAuth();
   renderTemplates();
   renderHistory();
   renderFavorites();
@@ -1355,6 +1570,9 @@ function init() {
   restoreFromShare();
   if (!elements.userInput.value) generate({ count: false });
   initAmbientCanvas();
+  loadServerTemplates();
+  refreshServerStats();
+  restoreSession();
 }
 
 init();

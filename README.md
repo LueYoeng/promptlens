@@ -4,6 +4,11 @@ PromptLens 是一个静态网页工具，用于把原始需求、问题、图片
 
 ## 当前功能
 
+- 动态后端：Node 服务、API 路由、本地 JSON 数据库
+- 商用账户：注册、登录、退出、会话令牌
+- 云端历史与收藏：登录后保存到服务端数据库
+- 服务端模板与统计：模板、生成量、收藏量通过 API 获取
+- 安全 AI 代理：通过后端 `/api/optimize` 调用 AI，避免在前端暴露 API Key
 - 模板中心：开发、图片、写作、分析、商业、个人场景模板
 - 追问模式：自动生成补充问题，并把回答合并进需求
 - 提示词改写器：优化已有提示词，而不是执行原提示词
@@ -16,9 +21,54 @@ PromptLens 是一个静态网页工具，用于把原始需求、问题、图片
 - 可配置 AI 后端接入端点
 - 暗色模式和移动端布局
 
+## 本地动态运行
+
+需要 Node.js 18 或更高版本。
+
+```bash
+npm start
+```
+
+启动后访问：
+
+```text
+http://localhost:8787
+```
+
+后端会自动创建本地数据库：
+
+```text
+data/db.json
+```
+
+该文件已加入 `.gitignore`，不会被提交到 GitHub。
+
+## 动态 API
+
+- `GET /api/health`：健康检查
+- `GET /api/templates`：获取服务端模板
+- `GET /api/stats`：获取站点统计
+- `POST /api/auth/register`：注册账户
+- `POST /api/auth/login`：登录账户
+- `POST /api/auth/logout`：退出登录
+- `GET /api/me`：读取当前用户
+- `GET /api/prompts`：读取云端历史
+- `POST /api/prompts`：保存云端历史
+- `GET /api/favorites`：读取云端收藏
+- `POST /api/favorites`：保存云端收藏
+- `POST /api/optimize`：后端 AI 增强
+
 ## AI 后端接入
 
-GitHub Pages 只能托管静态文件，不能安全保存 API Key。生产环境应把密钥放在后端，然后在网页的“AI 接入”里填写后端地址。
+GitHub Pages 只能托管静态文件，不能安全保存 API Key。动态版已经提供 Node 后端，可以把 AI Key 放在服务器环境变量里。
+
+```bash
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=gpt-4.1-mini
+npm start
+```
+
+如果没有配置 `OPENAI_API_KEY`，`/api/optimize` 会返回服务端规则增强结果，网站仍然可用。
 
 前端会向后端发送：
 
@@ -68,3 +118,5 @@ GitHub Pages 只能托管静态文件，不能安全保存 API Key。生产环�
 ```text
 https://<github-user>.github.io/<repo-name>/
 ```
+
+注意：GitHub Pages 只能展示静态版。如果要让注册、登录、云端历史、AI 后端这些动态功能在公网可用，需要部署到 Vercel、Cloudflare、Railway、Render 或自己的服务器。
