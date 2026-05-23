@@ -97,7 +97,7 @@ button {
 
 .topbar {
   display: grid;
-  grid-template-columns: auto minmax(180px, 1fr) minmax(320px, 420px);
+  grid-template-columns: auto minmax(180px, 1fr) auto;
   align-items: start;
   gap: 18px;
   min-height: 64px;
@@ -180,11 +180,22 @@ button {
 }
 
 .top-auth {
-  order: 2;
-  flex: 0 0 100%;
   width: min(360px, 100%);
   padding: 12px;
   box-shadow: var(--soft-shadow);
+}
+
+.account-popover {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  z-index: 8;
+  min-width: 320px;
+}
+
+.account-toggle {
+  min-height: 38px;
+  padding: 0 14px;
 }
 
 .top-auth .section-heading {
@@ -780,6 +791,43 @@ input::placeholder {
   background: var(--panel-solid);
 }
 
+.context-card {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--gold) 12%, transparent), transparent 54%),
+    color-mix(in srgb, var(--panel-solid) 78%, transparent);
+}
+
+.context-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.quick-actions button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--panel-solid);
+}
+
+.quick-actions button:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: var(--accent-soft);
+}
+
 .clarify-box {
   display: grid;
   gap: 10px;
@@ -1088,7 +1136,7 @@ input[type="range"] {
 
 .tabs {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 7px;
   margin-bottom: 12px;
 }
@@ -1443,6 +1491,12 @@ input[type="range"] {
     width: 100%;
   }
 
+  .account-popover {
+    left: 0;
+    right: 0;
+    min-width: 0;
+  }
+
   .top-metrics,
   .topbar-actions {
     justify-content: stretch;
@@ -1496,9 +1550,12 @@ input[type="range"] {
   .examples,
   .field-grid,
   .toggle-grid,
+  .context-grid,
+  .quick-actions,
   .quality-grid,
   .tabs,
   .action-row,
+  .conversation-reply,
   .mini-actions {
     grid-template-columns: 1fr;
   }

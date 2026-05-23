@@ -18,6 +18,8 @@ const elements = {
   loginBtn: $("#loginBtn"),
   registerBtn: $("#registerBtn"),
   logoutBtn: $("#logoutBtn"),
+  accountToggle: $("#accountToggle"),
+  accountPanel: $("#accountPanel"),
   modeStatus: $("#modeStatus"),
   statGenerated: $("#statGenerated"),
   statFavorites: $("#statFavorites"),
@@ -46,6 +48,9 @@ const elements = {
   userInput: $("#userInput"),
   charCount: $("#charCount"),
   clearInput: $("#clearInput"),
+  audienceInput: $("#audienceInput"),
+  successMetric: $("#successMetric"),
+  avoidThings: $("#avoidThings"),
   refreshQuestions: $("#refreshQuestions"),
   clarificationList: $("#clarificationList"),
   applyClarifications: $("#applyClarifications"),
@@ -75,6 +80,7 @@ const elements = {
   resultPrompt: $("#resultPrompt"),
   variantList: $("#variantList"),
   resultScore: $("#resultScore"),
+  resultAudit: $("#resultAudit"),
   resultBlueprint: $("#resultBlueprint"),
   resultImage: $("#resultImage"),
   historyList: $("#historyList"),
@@ -370,6 +376,9 @@ function collectOptions() {
     tone: elements.tone.value,
     format: elements.format.value,
     detail: Number(elements.detailRange.value),
+    audience: normalizeText(elements.audienceInput.value),
+    successMetric: normalizeText(elements.successMetric.value),
+    avoidThings: normalizeText(elements.avoidThings.value),
     includeRole: elements.includeRole.checked,
     includeConstraints: elements.includeConstraints.checked,
     includeFormat: elements.includeFormat.checked,
@@ -504,6 +513,15 @@ function buildPrompt(text, options) {
   sections.push(textSection("适配对象", getTargetInstruction(options.targetAI)));
   sections.push(textSection("语言与语气", `${getLanguageInstruction(options.language)}\n${getToneInstruction(options.tone)}`));
 
+  const contextLines = [
+    options.audience ? `目标用户：${options.audience}` : "",
+    options.successMetric ? `成功标准：${options.successMetric}` : "",
+    options.avoidThings ? `避免事项：${options.avoidThings}` : ""
+  ].filter(Boolean);
+  if (contextLines.length) {
+    sections.push(textSection("业务上下文", contextLines.join("\n")));
+  }
+
   if (options.includeConstraints) {
     sections.push(textSection("执行要求", buildModeRequirements(mode, options.detail)));
     sections.push(textSection("细节密度", detailInstruction(options.detail)));
@@ -554,6 +572,8 @@ function buildBlueprint(text, mode, options) {
       `任务目标：${profile.goal}`,
       `输出要求：${profile.deliverable}`,
       `目标 AI：${getTargetInstruction(options.targetAI)}`,
+      `目标用户：${options.audience || "未指定"}`,
+      `成功标准：${options.successMetric || "未指定"}`,
       `语气：${getToneInstruction(options.tone)}`,
       `语言：${getLanguageInstruction(options.language)}`,
       `格式：${getFormatInstruction(options.format)}`
@@ -709,11 +729,12 @@ function calculateMetrics(text, options, mode) {
   const hasConstraints = options.includeConstraints ? 18 : 0;
   const hasFormat = options.includeFormat ? 18 : 0;
   const hasChecklist = options.includeChecklist ? 10 : 0;
+  const hasContextProfile = (options.audience ? 8 : 0) + (options.successMetric ? 10 : 0) + (options.avoidThings ? 6 : 0);
   const modeBonus = mode === "code" || mode === "analysis" ? 8 : 5;
   return {
     clarity: clamp(lengthScore + options.detail * 6, 0, 100),
-    context: clamp(34 + hasRole + options.detail * 10 + (text.length > 36 ? 16 : 0), 0, 100),
-    constraint: clamp(34 + hasConstraints + options.detail * 9 + hasChecklist, 0, 100),
+    context: clamp(34 + hasRole + hasContextProfile + options.detail * 9 + (text.length > 36 ? 14 : 0), 0, 100),
+    constraint: clamp(34 + hasConstraints + (options.avoidThings ? 8 : 0) + options.detail * 8 + hasChecklist, 0, 100),
     format: clamp(38 + hasFormat + (options.format !== "plain" ? 18 : 6) + options.detail * 6, 0, 100),
     action: clamp(40 + modeBonus + options.detail * 8 + (text.length > 18 ? 14 : 0), 0, 100)
   };
@@ -722,6 +743,9 @@ function calculateMetrics(text, options, mode) {
 function buildImprovementTips(text, options, mode) {
   const tips = [];
   if (text.length < 28) tips.push("补充目标用户、使用场景和成功标准");
+  if (!options.audience) tips.push("填写“目标用户”，让 AI 更准确判断语气、深度和交付标准");
+  if (!options.successMetric) tips.push("填写“成功标准”，让结果更容易验收");
+  if (!options.avoidThings) tips.push("填写“避免事项”，减少跑偏和不符合预期的输出");
   if (!/[0-9一二三四五六七八九十]/.test(text)) tips.push("加入数量、时间、篇幅、尺寸或验收指标");
   if (mode === "code") tips.push("明确技术栈、页面清单、数据结构和部署方式");
   if (mode === "image") tips.push("明确主体、构图、镜头、光线、材质和画幅");
@@ -758,6 +782,49 @@ function buildScoreExplanation(text, options, mode, metrics) {
     "",
     "下一步：",
     "先补齐最关键的缺失信息，再点击“生成精准提示词”或使用“对话式优化”。"
+  ].join("\n");
+}
+
+function buildAuditReport(text, options, result) {
+  if (!text) return "";
+  const checks = [
+    {
+      label: "目标用户",
+      ok: Boolean(options.audience),
+      detail: options.audience || "还没有指定谁会使用这个结果"
+    },
+    {
+      label: "成功标准",
+      ok: Boolean(options.successMetric),
+      detail: options.successMetric || "还没有说明什么结果算成功"
+    },
+    {
+      label: "避免事项",
+      ok: Boolean(options.avoidThings),
+      detail: options.avoidThings || "还没有说明不希望出现什么内容"
+    },
+    {
+      label: "可衡量约束",
+      ok: /[0-9一二三四五六七八九十]/.test(text),
+      detail: /[0-9一二三四五六七八九十]/.test(text) ? "已经包含数量、时间或其他指标" : "建议补充数量、篇幅、时间、尺寸或验收指标"
+    },
+    {
+      label: "输出格式",
+      ok: options.includeFormat,
+      detail: options.includeFormat ? getFormatInstruction(options.format) : "建议开启交付格式"
+    }
+  ];
+  const passed = checks.filter((item) => item.ok).length;
+  const level = result.score >= 85 ? "可直接使用" : result.score >= 70 ? "建议小幅补充" : "需要继续澄清";
+  return [
+    "体检结论：",
+    `${level}。当前通过 ${passed}/${checks.length} 项关键检查。`,
+    "",
+    "检查项：",
+    checks.map((item, index) => `（${index + 1}）${item.label}：${item.ok ? "已具备" : "待补充"}。${item.detail}`).join("\n"),
+    "",
+    "推荐下一步：",
+    textList(buildImprovementTips(text, options, result.mode).slice(0, 5))
   ].join("\n");
 }
 
@@ -875,11 +942,83 @@ function sendConversationReply() {
   showToast("已用对话内容优化");
 }
 
+function buildQuickPrompt(action, source, currentPrompt, options) {
+  const context = [
+    options.audience ? `目标用户：${options.audience}` : "",
+    options.successMetric ? `成功标准：${options.successMetric}` : "",
+    options.avoidThings ? `避免事项：${options.avoidThings}` : ""
+  ].filter(Boolean).join("\n");
+  const base = currentPrompt || source;
+  const actions = {
+    pro: [
+      "商业版提示词：",
+      "请以成熟商业项目交付标准执行以下任务，重点关注目标用户、业务目标、可执行步骤、验收标准和风险控制。",
+      context,
+      `原始任务：${source}`,
+      "",
+      "输出要求：结果要专业、清晰、可验证，避免空泛描述。"
+    ],
+    short: [
+      "压缩版提示词：",
+      "请把下面的需求整理成一段可直接发送给 AI 的短提示词，控制在 180 字以内，保留目标、输出格式和关键约束。",
+      context,
+      `原始任务：${source}`
+    ],
+    deeper: [
+      "补全上下文提示词：",
+      "请先识别下面需求中缺失的背景信息，再基于合理假设生成完整提示词。",
+      context,
+      `原始任务：${source}`,
+      "",
+      "必须补齐：目标用户、使用场景、边界条件、交付标准、验收方式和需要追问的问题。"
+    ],
+    test: [
+      "验收清单提示词：",
+      "请为下面任务生成一份可执行的验收检查清单，按功能、内容、体验、边界情况和交付质量分类。",
+      context,
+      `原始任务：${source}`,
+      "",
+      "每一项都要能被确认是通过还是未通过。"
+    ],
+    image: [
+      "图片生成提示词：",
+      "请把下面需求转换成图像模型可用的普通文本提示词。",
+      `画面需求：${source}`,
+      context,
+      "",
+      "必须包含：主体、场景、构图、镜头、光线、材质、色彩、风格、画幅比例、负面提示词。"
+    ]
+  };
+  return plainTextBlock((actions[action] || [base]).filter(Boolean).join("\n"));
+}
+
+function applyQuickAction(action) {
+  const source = normalizeText(elements.userInput.value);
+  if (!source) {
+    showToast("请先输入需求");
+    return;
+  }
+  const options = collectOptions();
+  const baseResult = state.currentResult.prompt ? state.currentResult : buildPrompt(source, options);
+  const prompt = buildQuickPrompt(action, source, baseResult.prompt, options);
+  state.currentResult = normalizeResultText({
+    ...baseResult,
+    prompt,
+    scoreExplanation: buildScoreExplanation(source, options, getActiveMode(source), calculateMetrics(source, options, getActiveMode(source)))
+  });
+  elements.resultPrompt.textContent = state.currentResult.prompt;
+  elements.resultScore.textContent = state.currentResult.scoreExplanation;
+  elements.resultAudit.textContent = buildAuditReport(source, options, state.currentResult);
+  activateTab("prompt");
+  showToast("快捷增强已应用");
+}
+
 function renderAuth() {
   const auth = getAuthState();
   if (auth.user) {
     elements.authName.textContent = auth.user.name || "已登录用户";
     elements.authEmail.textContent = `${auth.user.email} · ${auth.user.plan || "free"}`;
+    elements.accountToggle.textContent = auth.user.name || "账户";
     elements.authFields.classList.add("hidden");
     elements.loginBtn.classList.add("hidden");
     elements.registerBtn.classList.add("hidden");
@@ -887,12 +1026,17 @@ function renderAuth() {
   } else {
     elements.authName.textContent = "访客模式";
     elements.authEmail.textContent = "登录后可云端保存历史和收藏";
+    elements.accountToggle.textContent = "登录";
     elements.authFields.classList.remove("hidden");
     elements.loginBtn.classList.remove("hidden");
     elements.registerBtn.classList.remove("hidden");
     elements.logoutBtn.classList.add("hidden");
   }
   renderWorkspaceSummary();
+}
+
+function toggleAccountPanel() {
+  elements.accountPanel.classList.toggle("hidden");
 }
 
 function renderWorkspaceSummary() {
@@ -994,6 +1138,7 @@ function renderResult(result) {
   elements.resultBlueprint.textContent = normalized.blueprint;
   elements.resultImage.textContent = normalized.image;
   elements.resultScore.textContent = normalized.scoreExplanation || buildScoreExplanation(normalizeText(elements.userInput.value), collectOptions(), normalized.mode, normalized.metrics);
+  elements.resultAudit.textContent = buildAuditReport(normalizeText(elements.userInput.value), collectOptions(), normalized);
   elements.scoreValue.textContent = normalized.score;
   elements.barClarity.style.width = `${normalized.metrics.clarity || 0}%`;
   elements.barContext.style.width = `${normalized.metrics.context || 0}%`;
@@ -1112,6 +1257,9 @@ function saveSettings(partial = {}) {
     ...getSettings(),
     workspaceName: elements.workspaceName.value.trim(),
     syncEndpoint: elements.syncEndpoint.value.trim(),
+    audience: elements.audienceInput.value.trim(),
+    successMetric: elements.successMetric.value.trim(),
+    avoidThings: elements.avoidThings.value.trim(),
     enableAI: elements.enableAI.checked,
     aiEndpoint: elements.aiEndpoint.value.trim(),
     aiModel: elements.aiModel.value,
@@ -1126,6 +1274,9 @@ function renderSettings() {
   const settings = getSettings();
   elements.workspaceName.value = settings.workspaceName || "";
   elements.syncEndpoint.value = settings.syncEndpoint || "";
+  elements.audienceInput.value = settings.audience || "";
+  elements.successMetric.value = settings.successMetric || "";
+  elements.avoidThings.value = settings.avoidThings || "";
   elements.enableAI.checked = Boolean(settings.enableAI);
   elements.aiEndpoint.value = settings.aiEndpoint || "";
   elements.aiModel.value = settings.aiModel || "auto";
@@ -1548,6 +1699,9 @@ function restoreFromShare() {
     elements.tone.value = payload.options?.tone || "professional";
     elements.format.value = payload.options?.format || "structured";
     elements.detailRange.value = payload.options?.detail || 4;
+    elements.audienceInput.value = payload.options?.audience || "";
+    elements.successMetric.value = payload.options?.successMetric || "";
+    elements.avoidThings.value = payload.options?.avoidThings || "";
     elements.includeRole.checked = payload.options?.includeRole !== false;
     elements.includeConstraints.checked = payload.options?.includeConstraints !== false;
     elements.includeFormat.checked = payload.options?.includeFormat !== false;
@@ -1642,6 +1796,11 @@ function bindEvents() {
   elements.authPasswordInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") loginAccount();
   });
+  elements.accountToggle.addEventListener("click", toggleAccountPanel);
+  document.addEventListener("click", (event) => {
+    const insideAccount = elements.accountPanel.contains(event.target) || elements.accountToggle.contains(event.target);
+    if (!insideAccount) elements.accountPanel.classList.add("hidden");
+  });
   elements.syncHistory.addEventListener("click", syncHistory);
   elements.saveAIConfig.addEventListener("click", () => {
     saveSettings();
@@ -1675,6 +1834,9 @@ function bindEvents() {
     elements.tone,
     elements.format,
     elements.detailRange,
+    elements.audienceInput,
+    elements.successMetric,
+    elements.avoidThings,
     elements.includeRole,
     elements.includeConstraints,
     elements.includeFormat,
@@ -1697,6 +1859,9 @@ function bindEvents() {
   elements.applyClarifications.addEventListener("click", applyClarifications);
   elements.startConversation.addEventListener("click", startConversationFlow);
   elements.sendConversationReply.addEventListener("click", sendConversationReply);
+  $$(".quick-actions [data-quick-action]").forEach((button) => {
+    button.addEventListener("click", () => applyQuickAction(button.dataset.quickAction));
+  });
   elements.conversationReply.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) sendConversationReply();
   });

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PromptLens 提示词精炼台</title>
-  <link rel="stylesheet" href="styles.css?v=20260520-pro-suite">
-  <script defer src="app.js?v=20260520-pro-suite"></script>
+  <link rel="stylesheet" href="styles.css?v=20260523-expansion">
+  <script defer src="app.js?v=20260523-expansion"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -35,7 +35,8 @@
         <button class="icon-button" id="themeToggle" type="button" aria-label="切换主题" title="切换主题">
           <span class="theme-glyph" aria-hidden="true"></span>
         </button>
-        <section class="tool-section auth-section top-auth">
+        <button class="secondary-button account-toggle" id="accountToggle" type="button">账户</button>
+        <section class="tool-section auth-section top-auth account-popover hidden" id="accountPanel">
           <div class="section-heading">
             <div>
               <span class="eyebrow">SIGN IN</span>
@@ -239,6 +240,37 @@
           <button type="button" data-example="分析一家线上课程平台最近三个月付费转化率下降的可能原因，并给出排查框架。">分析</button>
         </div>
 
+        <section class="context-card">
+          <div class="section-heading inline">
+            <div>
+              <span class="eyebrow">CONTEXT</span>
+              <h3>项目画像</h3>
+            </div>
+          </div>
+          <div class="context-grid">
+            <label>
+              <span>目标用户</span>
+              <input id="audienceInput" type="text" placeholder="例如：咖啡店老板、内容创作者、学生">
+            </label>
+            <label>
+              <span>成功标准</span>
+              <input id="successMetric" type="text" placeholder="例如：能直接部署、3 分钟内理解、转化率提升">
+            </label>
+            <label>
+              <span>避免事项</span>
+              <input id="avoidThings" type="text" placeholder="例如：不要太复杂、不要营销腔、不要暴露隐私">
+            </label>
+          </div>
+        </section>
+
+        <section class="quick-actions" aria-label="快捷增强">
+          <button type="button" data-quick-action="pro">商业版</button>
+          <button type="button" data-quick-action="short">压缩版</button>
+          <button type="button" data-quick-action="deeper">补全上下文</button>
+          <button type="button" data-quick-action="test">验收清单</button>
+          <button type="button" data-quick-action="image">转图片提示</button>
+        </section>
+
         <section class="clarify-box">
           <div class="section-heading inline">
             <div>
@@ -400,6 +432,7 @@
           <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整提示词</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="versions">版本对比</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="score">评分解释</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="audit">体检报告</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">结构拆解</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="image">图片参数</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="history">历史</button>
@@ -410,6 +443,7 @@
           <pre id="resultPrompt" class="result-view active" data-panel="prompt"></pre>
           <div id="variantList" class="variant-list result-view" data-panel="versions"></div>
           <pre id="resultScore" class="result-view" data-panel="score"></pre>
+          <pre id="resultAudit" class="result-view" data-panel="audit"></pre>
           <pre id="resultBlueprint" class="result-view" data-panel="blueprint"></pre>
           <pre id="resultImage" class="result-view" data-panel="image"></pre>
           <div id="historyList" class="history-list result-view" data-panel="history"></div>
@@ -475,6 +509,7 @@
               <p>帮我创建一个咖啡店会员管理网站，需要会员档案、消费记录、优惠券、数据看板，界面要高级，适合电脑和手机使用。</p>
             </div>
             <p>“生成提示词”适合从零开始整理需求；“改写提示词”适合你已经有一段提示词，但觉得它太粗糙、太短或不够专业。</p>
+            <p>“项目画像”用于补充目标用户、成功标准和避免事项。填写后，系统会把这些信息自动加入提示词和体检报告。</p>
           </section>
 
           <section id="help-questions" class="help-card">
@@ -503,6 +538,8 @@
             <ul>
               <li><strong>完整提示词：</strong>最推荐复制给 AI 使用的主版本。</li>
               <li><strong>版本对比：</strong>提供简洁版、专业版、超详细版、可直接复制版，适合不同复杂度。</li>
+              <li><strong>评分解释：</strong>说明分数来源、优势项和短板。</li>
+              <li><strong>体检报告：</strong>检查目标用户、成功标准、避免事项、可衡量约束和输出格式是否完整。</li>
               <li><strong>结构拆解：</strong>告诉你这条提示词由哪些部分组成，方便继续修改。</li>
               <li><strong>图片参数：</strong>当场景是图片生成时，会给出正向提示词、负面提示词和画幅建议。</li>
               <li><strong>评分：</strong>用于判断需求是否足够清楚，分数低时建议补充上下文和约束。</li>
