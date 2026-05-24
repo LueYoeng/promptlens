@@ -111,7 +111,7 @@ const detailLabels = ["极简", "简洁", "标准", "精细", "专家级"];
 const modeNames = {
   auto: "自动识别",
   qa: "问答推理",
-  code: "开发创建",
+  code: "系统开发",
   image: "图像生成",
   writing: "写作表达",
   analysis: "分析决策"
@@ -119,81 +119,81 @@ const modeNames = {
 
 const profiles = {
   qa: {
-    role: "你是一名善于拆解复杂问题的高级研究助理，能够先澄清问题边界，再给出清晰、可靠、可执行的回答。",
-    goal: "围绕原始问题给出准确回答，同时解释关键依据、必要背景和可落地建议。",
-    focus: ["明确问题的真实意图", "区分事实、推断和建议", "先给结论，再给推理过程", "在信息不足时列出需要补充的问题"],
-    deliverable: "结论摘要、原因分析、可执行建议、必要的后续问题"
+    role: "你是一名资深 AI 任务书设计师，擅长把模糊问题整理成清晰、可靠、可执行的 AI 任务说明。",
+    goal: "围绕原始问题生成一份可交给 AI 执行的任务书，明确回答目标、判断边界、输出要求和后续行动。",
+    focus: ["明确问题的真实意图", "区分事实、推断和建议", "规定回答结构和深度", "在信息不足时列出需要补充的问题"],
+    deliverable: "任务背景、回答目标、执行要求、输出格式、验收标准、必要追问"
   },
   code: {
-    role: "你是一名资深全栈工程师、产品设计师和代码审查者，擅长把模糊需求转化为可运行、可维护、体验精良的实现。",
-    goal: "基于原始需求完成系统设计或代码实现，并确保交付物可运行、易验证、界面符合目标用户场景。",
-    focus: ["先识别现有项目结构和技术栈", "给出必要的数据结构、页面状态和交互流程", "实现核心功能，不停留在建议层", "说明验证方式和剩余风险"],
-    deliverable: "实现方案、关键文件、核心代码、运行方式、测试或验证结果"
+    role: "你是一名资深产品经理、全栈工程师和交付负责人，擅长把一句开发想法整理成可执行的软件开发任务书。",
+    goal: "把原始开发需求转化为 AI 可以直接执行的产品与开发任务书，覆盖功能范围、页面结构、数据、交互、UI、验收和部署。",
+    focus: ["明确目标用户和核心流程", "拆出页面、数据结构、状态和接口", "定义 UI 风格、运行方式和验收标准", "提示实现时需要注意的边界和风险"],
+    deliverable: "产品目标、功能清单、页面结构、数据模型、交互规则、UI要求、技术建议、验收标准"
   },
   image: {
-    role: "你是一名图像提示词导演，擅长把概念拆成主体、环境、镜头、光线、材质、风格和负面约束。",
-    goal: "将原始画面想法转化为可直接用于图像模型的高质量提示词。",
+    role: "你是一名图像任务书导演，擅长把画面想法拆成主体、环境、镜头、光线、材质、风格和负面约束。",
+    goal: "将原始画面想法转化为可直接用于图像模型的任务书和高质量图像提示。",
     focus: ["明确主体和主体动作", "补齐场景、构图、镜头和光照", "指定材质、色彩、质感和风格", "加入负面提示词避免常见瑕疵"],
-    deliverable: "正向提示词、负面提示词、画幅比例、风格关键词、可选变体"
+    deliverable: "画面目标、正向提示、负面提示、画幅比例、风格关键词、可选变体"
   },
   writing: {
-    role: "你是一名资深编辑和内容策略师，能够按照受众、目的、语气和发布渠道组织表达。",
-    goal: "把原始写作需求转化为结构清楚、语气准确、有明确交付标准的写作提示词。",
+    role: "你是一名资深编辑、内容策略师和任务拆解顾问，能够按照受众、目的、语气和发布渠道组织表达。",
+    goal: "把原始写作需求转化为结构清楚、语气准确、有明确交付标准的写作任务书。",
     focus: ["明确读者和使用场景", "给出结构、篇幅和语气要求", "保留关键信息并减少空泛表达", "让输出具备可直接发布或继续修改的质量"],
-    deliverable: "标题方向、正文结构、语气要求、改写规则、验收标准"
+    deliverable: "写作目标、受众画像、内容结构、语气要求、素材要求、验收标准"
   },
   analysis: {
-    role: "你是一名商业分析师和问题诊断顾问，擅长建立假设、拆分变量、设计验证路径并输出决策建议。",
-    goal: "把原始分析需求转化为可执行的分析框架，帮助 AI 输出有证据链、有优先级的结论。",
+    role: "你是一名商业分析师和问题诊断顾问，擅长把模糊业务问题整理成可执行的分析任务书。",
+    goal: "把原始分析需求转化为可执行的分析任务书，帮助 AI 输出有证据链、有优先级的结论。",
     focus: ["明确分析对象、指标和时间范围", "列出关键假设和影响因素", "设计排查顺序和数据需求", "输出优先级、行动建议和风险"],
-    deliverable: "分析框架、关键假设、数据需求、结论模板、行动清单"
+    deliverable: "分析目标、关键指标、假设框架、数据需求、排查路径、结论模板、行动清单"
   }
 };
 
 let templates = [
   {
     id: "saas-dashboard",
-    title: "网站系统开发",
+    title: "网站系统任务书",
     category: "开发",
     mode: "code",
     targetAI: "code",
     tone: "professional",
     format: "structured",
-    prompt: "创建一个面向中小企业的 SaaS 数据看板网站，需要登录、角色权限、指标卡片、趋势图、筛选器、导出报表和移动端适配，UI 要克制高级。"
+    prompt: "我想创建一个面向中小企业的 SaaS 数据看板网站，需要登录、角色权限、指标卡片、趋势图、筛选器、导出报表和移动端适配，UI 要克制高级，请整理成能交给 AI 开发的完整任务书。"
   },
   {
     id: "image-hero",
-    title: "网页首屏图片",
+    title: "网页首屏图像任务书",
     category: "图片",
     mode: "image",
     targetAI: "image",
     tone: "creative",
     format: "structured",
-    prompt: "生成一张适合科技产品官网首屏的视觉图片，主体是透明玻璃质感的 AI 工作台，清晨自然光，干净高级，画面可留出标题空间。"
+    prompt: "我想生成一张适合科技产品官网首屏的视觉图片，主体是透明玻璃质感的 AI 工作台，清晨自然光，干净高级，画面需要留出标题空间，请整理成图像模型可执行的任务书。"
   },
   {
     id: "xhs-post",
-    title: "小红书文案",
+    title: "小红书内容任务书",
     category: "写作",
     mode: "writing",
     targetAI: "chat",
     tone: "friendly",
     format: "steps",
-    prompt: "帮我写一篇小红书笔记，主题是普通人如何开始使用 AI 提升工作效率，要有标题、开头钩子、正文结构和结尾互动。"
+    prompt: "我想写一篇小红书笔记，主题是普通人如何开始使用 AI 提升工作效率，需要标题、开头钩子、正文结构和结尾互动，请整理成写作任务书。"
   },
   {
     id: "business-diagnosis",
-    title: "业务诊断",
+    title: "业务诊断任务书",
     category: "分析",
     mode: "analysis",
     targetAI: "chat",
     tone: "strict",
     format: "table",
-    prompt: "分析一个线上课程平台近三个月付费转化率下降的可能原因，给出指标拆解、排查路径、数据需求和优先级行动建议。"
+    prompt: "我想分析一个线上课程平台近三个月付费转化率下降的可能原因，需要指标拆解、排查路径、数据需求和优先级行动建议，请整理成分析任务书。"
   },
   {
     id: "paper-outline",
-    title: "论文报告",
+    title: "论文报告任务书",
     category: "写作",
     mode: "writing",
     targetAI: "chat",
@@ -203,7 +203,7 @@ let templates = [
   },
   {
     id: "video-script",
-    title: "视频脚本",
+    title: "短视频脚本任务书",
     category: "写作",
     mode: "writing",
     targetAI: "chat",
@@ -213,7 +213,7 @@ let templates = [
   },
   {
     id: "resume-upgrade",
-    title: "简历优化",
+    title: "简历优化任务书",
     category: "个人",
     mode: "writing",
     targetAI: "chat",
@@ -223,7 +223,7 @@ let templates = [
   },
   {
     id: "translation-polish",
-    title: "翻译润色",
+    title: "翻译润色任务书",
     category: "写作",
     mode: "writing",
     targetAI: "chat",
@@ -233,24 +233,24 @@ let templates = [
   },
   {
     id: "product-research",
-    title: "产品调研",
+    title: "产品调研任务书",
     category: "商业",
     mode: "analysis",
     targetAI: "chat",
     tone: "strict",
     format: "table",
-    prompt: "调研一款 AI 提示词优化工具的目标用户、核心场景、竞品功能、商业模式和 MVP 优先级。"
+    prompt: "调研一款 AI 任务书生成工具的目标用户、核心场景、竞品功能、商业模式和 MVP 优先级。"
   },
   {
     id: "prompt-rewrite",
-    title: "提示词改写",
+    title: "任务书改写",
     category: "个人",
     mode: "qa",
     targetAI: "chat",
     tone: "professional",
     format: "structured",
     toolMode: "rewrite",
-    prompt: "你是AI，请帮我写一篇关于效率的文章。"
+    prompt: "你是 AI，请帮我写一篇关于效率的文章。请把这句话改写成目标清楚、输出标准明确、可直接执行的任务书。"
   }
 ];
 
@@ -507,18 +507,20 @@ function buildPrompt(text, options) {
 
   const profile = profiles[mode] || profiles.qa;
   const sections = [];
-  const sourceLabel = options.toolMode === "rewrite" ? "待改写提示词" : "原始需求";
+  const sourceLabel = options.toolMode === "rewrite" ? "待改写任务书" : "一句想法";
 
   if (options.includeRole) {
     sections.push(textSection("角色", profile.role));
   }
 
   if (options.toolMode === "rewrite") {
-    sections.push(textSection("任务", "请把下面这段提示词升级为更精准、上下文更完整、输出标准更明确的版本。不要直接回答原提示词中的任务。"));
+    sections.push(textSection("任务", "请把下面这段任务说明升级为更精准、上下文更完整、交付标准更明确的 AI 任务书。不要直接执行原任务。"));
+  } else {
+    sections.push(textSection("任务", "请把下面的一句话或模糊想法整理成一份可以交给 AI 直接执行的任务书。"));
   }
 
   sections.push(textSection(sourceLabel, text));
-  sections.push(textSection("目标", options.toolMode === "rewrite" ? "优化提示词本身，让它更适合交给 AI 使用。" : profile.goal));
+  sections.push(textSection("交付目标", options.toolMode === "rewrite" ? "优化任务书本身，让它更适合交给 AI 使用。" : profile.goal));
   sections.push(textSection("适配对象", getTargetInstruction(options.targetAI)));
   sections.push(textSection("语言与语气", `${getLanguageInstruction(options.language)}\n${getToneInstruction(options.tone)}`));
 
@@ -541,11 +543,11 @@ function buildPrompt(text, options) {
   }
 
   if (options.includeChecklist) {
-    sections.push(textSection("自检清单", `在最终回答前检查：\n${buildChecklist(mode)}`));
+    sections.push(textSection("验收标准", `生成结果必须能通过以下检查：\n${buildChecklist(mode)}`));
   }
 
   if (options.detail >= 4) {
-    sections.push(textSection("信息不足时的处理", "如果缺少关键上下文，请先列出最多 5 个澄清问题；若用户希望你直接继续，请明确写出你的合理假设再执行。"));
+    sections.push(textSection("信息不足时的处理", "如果缺少关键上下文，请先列出最多 5 个澄清问题；若用户希望你直接继续，请明确写出合理假设再执行。"));
   }
 
   const prompt = sections.join("\n\n");
@@ -576,12 +578,12 @@ function buildBlueprint(text, mode, options) {
 
   return [
     `场景：${modeNames[mode] || modeNames.qa}`,
-    `核心意图：把“${shorten(text, 76)}”转成更清晰、可执行的 AI 指令。`,
+    `核心意图：把“${shorten(text, 76)}”转成更清晰、可执行、可验收的 AI 任务书。`,
     `推荐角色：${profile.role}`,
     "",
     "关键槽位：",
     textList([
-      `任务目标：${profile.goal}`,
+      `交付目标：${profile.goal}`,
       `输出要求：${profile.deliverable}`,
       `目标 AI：${getTargetInstruction(options.targetAI)}`,
       `目标用户：${options.audience || "未指定"}`,
@@ -594,7 +596,7 @@ function buildBlueprint(text, mode, options) {
     "约束重点：",
     buildModeRequirements(mode, options.detail),
     "",
-    "改进建议：",
+    "任务书改进建议：",
     textList(buildImprovementTips(text, options, mode)),
     "",
     `风险提醒：${riskLine}`
@@ -639,38 +641,38 @@ function buildImagePanel(text, mode, options) {
 function buildVariants(text, mode, options) {
   const profile = profiles[mode] || profiles.qa;
   const concise = [
-    "【简洁版】",
+    "【精简任务书】",
     `${profile.role}`,
-    `请围绕以下需求输出结果：${text}`,
+    `请把以下想法整理成可执行任务书：${text}`,
     `${getFormatInstruction(options.format)} ${getLanguageInstruction(options.language)}`
   ].join("\n\n");
 
   const professional = [
-    "【专业版】",
+    "【标准任务书】",
     `角色：${profile.role}`,
-    `任务：${profile.goal}`,
-    `需求：${text}`,
+    `交付目标：${profile.goal}`,
+    `一句想法：${text}`,
     "要求：",
     buildModeRequirements(mode, Math.max(options.detail, 3)),
     `输出：${profile.deliverable}`
   ].join("\n\n");
 
   const expert = [
-    "【超详细版】",
+    "【交付任务书】",
     `你将作为：${profile.role}`,
-    `请先判断需求中的缺失信息，再基于合理假设完成任务。`,
+    `请先判断需求中的缺失信息，再基于合理假设生成可执行任务书。`,
     `原始内容：${text}`,
     "必须覆盖：",
     buildModeRequirements(mode, 5),
-    "输出前自检：",
+    "交付验收：",
     buildChecklist(mode)
   ].join("\n\n");
 
   const ready = [
     "【可直接复制版】",
     options.toolMode === "rewrite"
-      ? "请优化下面的提示词，只输出升级后的提示词，不要执行其中的任务。"
-      : "请直接执行下面的任务，并按要求输出。",
+      ? "请优化下面的任务书，只输出升级后的任务书，不要执行其中的任务。"
+      : "请把下面的想法整理成可执行任务书，并按要求输出。",
     `内容：${text}`,
     `输出语言：${getLanguageInstruction(options.language)}`,
     `输出格式：${getFormatInstruction(options.format)}`,
@@ -678,9 +680,9 @@ function buildVariants(text, mode, options) {
   ].join("\n\n");
 
   return [
-    { title: "简洁版", note: "适合快速提问", content: concise },
-    { title: "专业版", note: "适合日常高质量使用", content: professional },
-    { title: "超详细版", note: "适合复杂任务和外包交付", content: expert },
+    { title: "精简任务书", note: "适合快速提问", content: concise },
+    { title: "标准任务书", note: "适合日常高质量使用", content: professional },
+    { title: "交付任务书", note: "适合复杂任务和外包交付", content: expert },
     { title: "可直接复制版", note: "适合马上粘贴给 AI", content: ready }
   ];
 }
@@ -788,7 +790,7 @@ function buildScoreExplanation(text, options, mode, metrics) {
   const tips = buildImprovementTips(text, options, mode);
   return [
     "评分解释：",
-    `当前分数主要由清晰度、上下文、约束、格式和可执行性共同决定。`,
+    `当前分数主要由任务书的清晰度、上下文、约束、格式和可执行性共同决定。`,
     `相对短板：${weakest || "暂无明显短板"}。`,
     `优势项：${strengths.length ? strengths.join("、") : "还没有特别突出的维度"}。`,
     "",
@@ -796,7 +798,7 @@ function buildScoreExplanation(text, options, mode, metrics) {
     textList(tips),
     "",
     "下一步：",
-    "先补齐最关键的缺失信息，再点击“生成精准提示词”或使用“对话式优化”。"
+    "先补齐最关键的缺失信息，再点击“生成 AI 任务书”或使用“对话式优化”。"
   ].join("\n");
 }
 
@@ -813,7 +815,7 @@ function appendScoreBreakdown(explanation, result) {
     explanation || "",
     "",
     "评分拆分：",
-    `结构分：${result.structureScore} 分，衡量提示词是否包含目标、上下文、约束、格式和可执行信息。`,
+    `结构分：${result.structureScore} 分，衡量任务书是否包含目标、上下文、约束、格式和可执行信息。`,
     aiLine,
     `综合分：${result.compositeScore} 分，按结构分 55% 和 AI质量分 45% 合成。`
   ].filter(Boolean).join("\n");
@@ -923,7 +925,7 @@ function renderConversationQuestions(questions = []) {
 
 function renderConversation() {
   if (!state.conversation.length) {
-    elements.conversationList.innerHTML = `<div class="chat-message assistant">输入需求后点击“开始追问”，系统会先问关键问题，再生成最终提示词。</div>`;
+    elements.conversationList.innerHTML = `<div class="chat-message assistant">输入想法后点击“开始追问”，系统会先问关键问题，再生成最终任务书。</div>`;
     return;
   }
   elements.conversationList.innerHTML = state.conversation.map((message) => `
@@ -969,7 +971,7 @@ function sendConversationReply() {
   const base = elements.userInput.value.replace(/\n\n对话补充：[\s\S]*$/g, "").trim();
   elements.userInput.value = `${base}${addition}`;
   elements.conversationReply.value = "";
-  state.conversation.push({ role: "assistant", content: "已吸收补充信息，并重新生成最终提示词。" });
+  state.conversation.push({ role: "assistant", content: "已吸收补充信息，并重新生成最终任务书。" });
   elements.charCount.textContent = elements.userInput.value.length;
   renderConversation();
   generate({ count: true });
@@ -985,38 +987,38 @@ function buildQuickPrompt(action, source, currentPrompt, options) {
   const base = currentPrompt || source;
   const actions = {
     pro: [
-      "商业版提示词：",
-      "请以成熟商业项目交付标准执行以下任务，重点关注目标用户、业务目标、可执行步骤、验收标准和风险控制。",
+      "完整任务书：",
+      "请以成熟商业项目交付标准整理以下任务，重点关注目标用户、业务目标、可执行步骤、验收标准和风险控制。",
       context,
-      `原始任务：${source}`,
+      `一句想法：${source}`,
       "",
       "输出要求：结果要专业、清晰、可验证，避免空泛描述。"
     ],
     short: [
-      "压缩版提示词：",
-      "请把下面的需求整理成一段可直接发送给 AI 的短提示词，控制在 180 字以内，保留目标、输出格式和关键约束。",
+      "精简任务书：",
+      "请把下面的想法整理成一段可直接发送给 AI 的短任务书，控制在 180 字以内，保留目标、输出格式和关键约束。",
       context,
-      `原始任务：${source}`
+      `一句想法：${source}`
     ],
     deeper: [
-      "补全上下文提示词：",
-      "请先识别下面需求中缺失的背景信息，再基于合理假设生成完整提示词。",
+      "补齐交付信息任务书：",
+      "请先识别下面需求中缺失的背景信息，再基于合理假设生成完整任务书。",
       context,
-      `原始任务：${source}`,
+      `一句想法：${source}`,
       "",
       "必须补齐：目标用户、使用场景、边界条件、交付标准、验收方式和需要追问的问题。"
     ],
     test: [
-      "验收清单提示词：",
+      "验收标准任务书：",
       "请为下面任务生成一份可执行的验收检查清单，按功能、内容、体验、边界情况和交付质量分类。",
       context,
-      `原始任务：${source}`,
+      `一句想法：${source}`,
       "",
       "每一项都要能被确认是通过还是未通过。"
     ],
     image: [
-      "图片生成提示词：",
-      "请把下面需求转换成图像模型可用的普通文本提示词。",
+      "图像任务书：",
+      "请把下面需求转换成图像模型可用的普通文本任务书。",
       `画面需求：${source}`,
       context,
       "",
@@ -1287,7 +1289,7 @@ function setToolMode(mode) {
   $$(".seg-button[data-tool-mode]").forEach((button) => {
     button.classList.toggle("active", button.dataset.toolMode === mode);
   });
-  elements.inputTitle.textContent = mode === "rewrite" ? "提示词改写器" : "需求工作台";
+  elements.inputTitle.textContent = mode === "rewrite" ? "任务书改写器" : "一句想法";
   generate({ count: false });
 }
 
@@ -1507,7 +1509,7 @@ function setHistory(items) {
 async function saveCurrentHistory() {
   const source = normalizeText(elements.userInput.value);
   if (!source || !state.currentResult.prompt) {
-    showToast("先生成一条提示词");
+    showToast("先生成一份任务书");
     return;
   }
   const item = buildSavedItem(source);
@@ -1568,7 +1570,7 @@ function setFavorites(items) {
 async function favoriteCurrentPrompt() {
   const source = normalizeText(elements.userInput.value);
   if (!source || !state.currentResult.prompt) {
-    showToast("先生成一条提示词");
+    showToast("先生成一份任务书");
     return;
   }
   const item = buildSavedItem(source);
@@ -1593,7 +1595,7 @@ async function favoriteCurrentPrompt() {
 }
 
 function renderFavorites() {
-  renderSavedList(elements.favoriteList, getFavorites(), "暂无收藏", "收藏后的提示词会显示在这里。");
+  renderSavedList(elements.favoriteList, getFavorites(), "暂无收藏", "收藏后的任务书会显示在这里。");
 }
 
 function renderSavedList(container, items, emptyTitle, emptyText) {
@@ -1603,7 +1605,7 @@ function renderSavedList(container, items, emptyTitle, emptyText) {
   }
   container.innerHTML = items.map((item) => `
     <button class="history-card" type="button" data-saved-id="${item.id}">
-      <strong>${modeNames[item.mode] || "提示词"} · 综合 ${item.compositeScore || item.score} 分</strong>
+      <strong>${modeNames[item.mode] || "任务书"} · 综合 ${item.compositeScore || item.score} 分</strong>
       <span>${item.createdAt}</span>
       <p>${escapeHtml(shorten(item.source, 104))}</p>
     </button>
@@ -1694,8 +1696,8 @@ function exportFile(extension) {
   }
   const isMarkdown = extension === "md";
   const body = isMarkdown
-    ? `# PromptLens 提示词\n\n${text}\n\n## 结构拆解\n\n${state.currentResult.blueprint}`
-    : `${text}\n\n--- 结构拆解 ---\n\n${state.currentResult.blueprint}`;
+    ? `# PromptLens AI 任务书\n\n${text}\n\n## 交付拆解\n\n${state.currentResult.blueprint}`
+    : `${text}\n\n--- 交付拆解 ---\n\n${state.currentResult.blueprint}`;
   const blob = new Blob([body], { type: isMarkdown ? "text/markdown;charset=utf-8" : "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

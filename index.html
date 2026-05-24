@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PromptLens 提示词精炼台</title>
-  <link rel="stylesheet" href="styles.css?v=20260524-score-ui">
-  <script defer src="app.js?v=20260524-score-ui"></script>
+  <title>PromptLens AI 任务书生成器</title>
+  <link rel="stylesheet" href="styles.css?v=20260524-task-brief">
+  <script defer src="app.js?v=20260524-task-brief"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -16,7 +16,7 @@
         <span class="brand-mark" aria-hidden="true"></span>
         <div>
           <h1>PromptLens</h1>
-          <p>提示词精炼台</p>
+          <p>AI 任务书工作台</p>
         </div>
       </div>
 
@@ -73,25 +73,25 @@
     <section class="workflow-strip" aria-label="使用流程">
       <div class="workflow-copy">
         <span class="eyebrow">WORKFLOW</span>
-        <h2>从模糊想法到可直接使用的 AI 提示词</h2>
-        <p>先写需求，再补充关键上下文，最后选择最合适的结果版本。</p>
+        <h2>把一句想法变成可交付的 AI 任务书</h2>
+        <p>适合不会写复杂需求的人，把目标、背景、约束和验收标准一次整理清楚。</p>
       </div>
       <div class="workflow-steps">
         <div class="workflow-step">
           <b>01</b>
-          <span>输入需求</span>
+          <span>写一句想法</span>
         </div>
         <div class="workflow-step">
           <b>02</b>
-          <span>回答追问</span>
+          <span>补齐信息</span>
         </div>
         <div class="workflow-step">
           <b>03</b>
-          <span>生成提示词</span>
+          <span>生成任务书</span>
         </div>
         <div class="workflow-step">
           <b>04</b>
-          <span>保存或分享</span>
+          <span>交给 AI 执行</span>
         </div>
       </div>
     </section>
@@ -100,8 +100,8 @@
       <aside class="side-panel">
         <div class="support-heading">
           <span class="eyebrow">SUPPORT</span>
-          <h2>辅助工具与账户设置</h2>
-          <p>这些模块不影响主流程，需要时再配置。</p>
+          <h2>模板、帮助与工作台</h2>
+          <p>先选模板或直接输入想法，系统会把它整理成能执行、能验收的任务说明。</p>
         </div>
 
         <section class="tool-section guide-section" aria-labelledby="guideTitle">
@@ -111,7 +111,7 @@
               <h2 id="guideTitle">说明与帮助</h2>
             </div>
           </div>
-          <p class="guide-summary">第一次使用建议先阅读完整帮助，了解主流程、各个按钮和高级功能的区别。</p>
+          <p class="guide-summary">第一次使用建议先阅读完整帮助，了解如何把一句模糊想法变成完整任务书。</p>
           <button class="primary-button guide-open-button" id="openHelpGuide" type="button">打开详细使用帮助</button>
         </section>
 
@@ -122,7 +122,7 @@
               <h2>模板中心</h2>
             </div>
           </div>
-          <input class="search-input" id="templateSearch" type="search" placeholder="搜索网站、图片、文案、分析...">
+          <input class="search-input" id="templateSearch" type="search" placeholder="搜索网站系统、短视频、图片、分析...">
           <div class="chip-row" id="categoryFilters" aria-label="模板分类"></div>
           <div class="template-list" id="templateList"></div>
           <div class="custom-template-box">
@@ -142,7 +142,7 @@
                 <input id="customTemplateCategory" type="text" placeholder="例如：写作">
               </label>
             </div>
-            <textarea class="mini-textarea" id="customTemplatePrompt" placeholder="写入你常用的需求模板..."></textarea>
+            <textarea class="mini-textarea" id="customTemplatePrompt" placeholder="写入你常用的任务类型或需求模板..."></textarea>
             <button class="secondary-button wide" id="saveCustomTemplate" type="button">保存自定义模板</button>
           </div>
         </section>
@@ -151,7 +151,7 @@
           <div class="section-heading">
             <div>
               <span class="eyebrow">ACCOUNT</span>
-              <h2>个人工作台</h2>
+              <h2>项目工作台</h2>
             </div>
           </div>
           <div class="workspace-summary" id="workspaceSummary">
@@ -215,18 +215,18 @@
         <div class="panel-heading">
           <div>
             <span class="eyebrow">INPUT</span>
-            <h2 id="inputTitle">需求工作台</h2>
+            <h2 id="inputTitle">一句想法</h2>
           </div>
           <button class="ghost-button" id="clearInput" type="button">清空</button>
         </div>
 
         <div class="segmented two" id="toolModeButtons" aria-label="工作模式">
-          <button class="seg-button active" type="button" data-tool-mode="create">生成提示词</button>
-          <button class="seg-button" type="button" data-tool-mode="rewrite">改写提示词</button>
+          <button class="seg-button active" type="button" data-tool-mode="create">生成任务书</button>
+          <button class="seg-button" type="button" data-tool-mode="rewrite">改写任务书</button>
         </div>
 
         <div class="textarea-shell">
-          <textarea id="userInput" placeholder="例如：帮我创建一个用于管理健身会员的网站系统，需要会员档案、课程预约和数据看板。"></textarea>
+          <textarea id="userInput" placeholder="例如：我想做一个健身房会员管理网站，需要会员档案、课程预约、数据看板，最好能直接交给 AI 帮我开发。"></textarea>
           <div class="textarea-footer">
             <span id="charCount">0</span>
             <span>字符</span>
@@ -244,7 +244,7 @@
           <div class="section-heading inline">
             <div>
               <span class="eyebrow">CONTEXT</span>
-              <h3>项目画像</h3>
+              <h3>交付画像</h3>
             </div>
           </div>
           <div class="context-grid">
@@ -264,11 +264,11 @@
         </section>
 
         <section class="quick-actions" aria-label="快捷增强">
-          <button type="button" data-quick-action="pro">商业版</button>
-          <button type="button" data-quick-action="short">压缩版</button>
-          <button type="button" data-quick-action="deeper">补全上下文</button>
-          <button type="button" data-quick-action="test">验收清单</button>
-          <button type="button" data-quick-action="image">转图片提示</button>
+          <button type="button" data-quick-action="pro">完整任务书</button>
+          <button type="button" data-quick-action="short">精简任务书</button>
+          <button type="button" data-quick-action="deeper">补齐交付信息</button>
+          <button type="button" data-quick-action="test">验收标准</button>
+          <button type="button" data-quick-action="image">图像任务书</button>
         </section>
 
         <section class="clarify-box">
@@ -292,7 +292,7 @@
             <button class="ghost-button" id="startConversation" type="button">开始追问</button>
           </div>
           <div class="conversation-list" id="conversationList">
-            <div class="chat-message assistant">输入需求后点击“开始追问”，系统会先问关键问题，再生成最终提示词。</div>
+            <div class="chat-message assistant">输入想法后点击“开始追问”，系统会先问关键问题，再生成最终任务书。</div>
           </div>
           <div class="conversation-reply">
             <textarea class="mini-textarea" id="conversationReply" placeholder="在这里回答追问，例如：目标用户是咖啡店老板，需要电脑和手机都能用。"></textarea>
@@ -387,7 +387,7 @@
         <div class="action-row">
           <button class="primary-button" id="generateBtn" type="button">
             <span class="button-symbol" aria-hidden="true"></span>
-            生成精准提示词
+            生成 AI 任务书
           </button>
           <button class="secondary-button" id="aiEnhanceBtn" type="button">AI 增强</button>
         </div>
@@ -397,9 +397,9 @@
         <div class="panel-heading output-heading">
           <div>
             <span class="eyebrow">OUTPUT</span>
-            <h2 id="outputTitle">优化结果</h2>
+            <h2 id="outputTitle">AI 任务书</h2>
           </div>
-          <div class="score" aria-label="提示词评分">
+          <div class="score" aria-label="任务书评分">
             <span id="scoreValue">0</span>
             <small>分</small>
           </div>
@@ -444,11 +444,11 @@
         </div>
 
         <div class="tabs" role="tablist" aria-label="结果视图">
-          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整提示词</button>
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="prompt">完整任务书</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="versions">版本对比</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="score">评分解释</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="audit">体检报告</button>
-          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">结构拆解</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="blueprint">交付拆解</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="image">图片参数</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="history">历史</button>
           <button class="tab" type="button" role="tab" aria-selected="false" data-tab="favorites">收藏</button>
@@ -471,7 +471,7 @@
           <button class="ghost-button" id="sharePrompt" type="button">分享链接</button>
           <button class="ghost-button" id="exportTxt" type="button">导出 TXT</button>
           <button class="ghost-button" id="exportMd" type="button">导出 MD</button>
-          <button class="ghost-button" id="copyPrompt" type="button">复制结果</button>
+          <button class="ghost-button" id="copyPrompt" type="button">复制任务书</button>
         </div>
       </section>
     </main>
@@ -484,7 +484,7 @@
       <header class="help-header">
         <div>
           <span class="eyebrow">HELP CENTER</span>
-          <h2 id="helpTitle">PromptLens 详细使用帮助</h2>
+          <h2 id="helpTitle">PromptLens AI 任务书使用帮助</h2>
         </div>
         <button class="icon-button" id="closeHelp" type="button" aria-label="关闭帮助" title="关闭帮助">
           <span class="close-glyph" aria-hidden="true"></span>
@@ -507,29 +507,29 @@
           <section id="help-quick" class="help-card">
             <h3>快速上手</h3>
             <ol>
-              <li>在“需求工作台”输入你想让 AI 做的事，可以是问题、开发需求、图片描述、文案任务或分析任务。</li>
-              <li>点击“生成精准提示词”。右侧会生成完整提示词、版本对比、结构拆解和评分。</li>
-              <li>如果你不知道怎么写，可以先从左侧“模板中心”选择模板，再把模板内容改成自己的需求。</li>
-              <li>生成后优先查看“完整提示词”。如果太长或太短，再切到“版本对比”选择合适版本。</li>
+              <li>在“一句想法”输入你想让 AI 做的事，可以很粗糙，比如“帮我做一个会员系统”。</li>
+              <li>补充目标用户、成功标准和避免事项，系统会把这些信息合并进任务书。</li>
+              <li>点击“生成 AI 任务书”。右侧会生成完整任务书、版本对比、交付拆解和评分。</li>
+              <li>复制“完整任务书”交给 ChatGPT、DeepSeek、Claude、代码助手或图像模型执行。</li>
             </ol>
           </section>
 
           <section id="help-input" class="help-card">
             <h3>输入区怎么用</h3>
-            <p>输入越具体，生成的提示词越精准。建议至少写清楚：目标、对象、场景、期望输出、限制条件。</p>
+            <p>输入可以很简单，但最好包含：你想做什么、给谁用、最终想得到什么、有没有限制条件。</p>
             <div class="help-example">
               <b>不够清楚：</b>
               <p>帮我做一个网站。</p>
               <b>更好：</b>
-              <p>帮我创建一个咖啡店会员管理网站，需要会员档案、消费记录、优惠券、数据看板，界面要高级，适合电脑和手机使用。</p>
+              <p>我想做一个咖啡店会员管理网站，给店长使用，需要会员档案、消费记录、优惠券、数据看板，界面要高级，电脑和手机都能用。</p>
             </div>
-            <p>“生成提示词”适合从零开始整理需求；“改写提示词”适合你已经有一段提示词，但觉得它太粗糙、太短或不够专业。</p>
-            <p>“项目画像”用于补充目标用户、成功标准和避免事项。填写后，系统会把这些信息自动加入提示词和体检报告。</p>
+            <p>“生成任务书”适合从零开始整理需求；“改写任务书”适合你已经有一段需求说明，但觉得它太粗糙、太短或不够专业。</p>
+            <p>“交付画像”用于补充目标用户、成功标准和避免事项。填写后，系统会自动加入任务书和体检报告。</p>
           </section>
 
           <section id="help-questions" class="help-card">
             <h3>追问模式</h3>
-            <p>当需求比较模糊时，先回答追问问题。系统会把你的回答合并到原需求里，再生成更完整的提示词。</p>
+            <p>当想法比较模糊时，先回答追问问题。系统会把你的回答合并到原始想法里，再生成更完整的任务书。</p>
             <ul>
               <li>不是每一题都必须填，只填你知道的部分即可。</li>
               <li>开发类任务重点补充页面、技术栈、数据和运行方式。</li>
@@ -540,24 +540,24 @@
 
           <section id="help-templates" class="help-card">
             <h3>模板中心</h3>
-            <p>模板适合不知道如何开始的用户。点击模板后，系统会自动填入示例需求，并切换到对应场景。</p>
+            <p>模板适合不知道如何开始的用户。点击模板后，系统会自动填入示例任务，并切换到对应场景。</p>
             <ul>
               <li>搜索框可以搜“网站”“图片”“文案”“分析”“简历”等关键词。</li>
               <li>分类按钮可以快速筛选开发、图片、写作、商业和个人场景。</li>
-              <li>模板只是起点，最好根据自己的业务或目标继续修改。</li>
+              <li>模板只是起点，最好根据自己的业务、受众和交付目标继续修改。</li>
             </ul>
           </section>
 
           <section id="help-output" class="help-card">
             <h3>结果区怎么看</h3>
             <ul>
-              <li><strong>完整提示词：</strong>最推荐复制给 AI 使用的主版本。</li>
-              <li><strong>版本对比：</strong>提供简洁版、专业版、超详细版、可直接复制版，适合不同复杂度。</li>
+              <li><strong>完整任务书：</strong>最推荐复制给 AI 使用的主版本。</li>
+              <li><strong>版本对比：</strong>提供精简任务书、标准任务书、交付任务书和可直接复制版，适合不同复杂度。</li>
               <li><strong>评分解释：</strong>说明结构分、AI质量分和综合分的来源。</li>
               <li><strong>体检报告：</strong>检查目标用户、成功标准、避免事项、可衡量约束和输出格式是否完整。</li>
-              <li><strong>结构拆解：</strong>告诉你这条提示词由哪些部分组成，方便继续修改。</li>
+              <li><strong>交付拆解：</strong>告诉你这份任务书由哪些部分组成，方便继续修改。</li>
               <li><strong>图片参数：</strong>当场景是图片生成时，会给出正向提示词、负面提示词和画幅建议。</li>
-              <li><strong>评分：</strong>用于判断需求是否足够清楚，分数低时建议补充上下文和约束。</li>
+              <li><strong>评分：</strong>用于判断任务书是否足够清楚，分数低时建议补充上下文和约束。</li>
             </ul>
           </section>
 
@@ -565,8 +565,8 @@
             <h3>保存、收藏、导出和分享</h3>
             <ul>
               <li><strong>保存历史：</strong>把当前结果保存到浏览器本地历史。</li>
-              <li><strong>收藏：</strong>把常用提示词放进收藏列表，方便以后再次打开。</li>
-              <li><strong>导出 TXT / MD：</strong>把提示词保存成文本或 Markdown 文件。</li>
+              <li><strong>收藏：</strong>把常用任务书放进收藏列表，方便以后再次打开。</li>
+              <li><strong>导出 TXT / MD：</strong>把任务书保存成文本或 Markdown 文件。</li>
               <li><strong>分享链接：</strong>生成一个包含当前输入和设置的链接，别人打开后可以继续编辑。</li>
             </ul>
             <p>历史和收藏默认保存在当前浏览器里，换电脑或清理浏览器数据后可能会丢失。</p>
@@ -586,10 +586,10 @@
             <h3>常见问题</h3>
             <details open>
               <summary>为什么没有填 AI 后端也能生成？</summary>
-              <p>因为网站内置了本地规则引擎，可以离线生成结构化提示词。AI 后端只是增强效果，不是基础使用的必要条件。</p>
+              <p>因为网站内置了本地规则引擎，可以离线生成结构化任务书。AI 后端只是增强效果，不是基础使用的必要条件。</p>
             </details>
             <details>
-              <summary>提示词太长怎么办？</summary>
+              <summary>任务书太长怎么办？</summary>
               <p>切到“版本对比”，选择简洁版；也可以把“细节密度”调低。</p>
             </details>
             <details>
@@ -597,7 +597,7 @@
               <p>不确定时保持“自动”。如果识别不准，再手动选择问答、开发、图片、写作或分析。</p>
             </details>
             <details>
-              <summary>如何得到更好的图片提示词？</summary>
+              <summary>如何得到更好的图像任务书？</summary>
               <p>写清楚主体、背景、镜头、光线、材质、颜色、风格和画幅。不要只写“生成一张好看的图片”。</p>
             </details>
           </section>

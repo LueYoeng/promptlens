@@ -28,33 +28,33 @@ const mimeTypes = {
 const defaultTemplates = [
   {
     id: "saas-dashboard",
-    title: "网站系统开发",
+    title: "网站系统任务书",
     category: "开发",
     mode: "code",
     targetAI: "code",
     tone: "professional",
     format: "structured",
-    prompt: "创建一个面向中小企业的 SaaS 数据看板网站，需要登录、角色权限、指标卡片、趋势图、筛选器、导出报表和移动端适配，UI 要克制高级。"
+    prompt: "我想创建一个面向中小企业的 SaaS 数据看板网站，需要登录、角色权限、指标卡片、趋势图、筛选器、导出报表和移动端适配，UI 要克制高级，请整理成能交给 AI 开发的完整任务书。"
   },
   {
     id: "business-diagnosis",
-    title: "业务诊断",
+    title: "业务诊断任务书",
     category: "分析",
     mode: "analysis",
     targetAI: "chat",
     tone: "strict",
     format: "table",
-    prompt: "分析一个线上课程平台近三个月付费转化率下降的可能原因，给出指标拆解、排查路径、数据需求和优先级行动建议。"
+    prompt: "我想分析一个线上课程平台近三个月付费转化率下降的可能原因，需要指标拆解、排查路径、数据需求和优先级行动建议，请整理成分析任务书。"
   },
   {
     id: "image-hero",
-    title: "网页首屏图片",
+    title: "网页首屏图像任务书",
     category: "图片",
     mode: "image",
     targetAI: "image",
     tone: "creative",
     format: "structured",
-    prompt: "生成一张适合科技产品官网首屏的视觉图片，主体是透明玻璃质感的 AI 工作台，清晨自然光，干净高级，画面可留出标题空间。"
+    prompt: "我想生成一张适合科技产品官网首屏的视觉图片，主体是透明玻璃质感的 AI 工作台，清晨自然光，干净高级，画面需要留出标题空间，请整理成图像模型可执行的任务书。"
   }
 ];
 
@@ -521,7 +521,7 @@ async function optimizeWithAi(input, body) {
   const payload = {
     model: modelMap[modelLabel] || modelMap.auto,
     messages: [
-      { role: "system", content: "You refine user requests into precise production-grade AI prompts. Return JSON only. Use plain text in all user-facing fields, not Markdown. Do not use # headings, Markdown bullets, code fences, or table syntax." },
+      { role: "system", content: "You turn vague user ideas into production-grade AI task briefs that can be copied into another AI and executed. Return JSON only. Use plain text in all user-facing fields, not Markdown. Do not use # headings, Markdown bullets, code fences, or table syntax." },
       {
         role: "user",
         content: JSON.stringify({
@@ -529,14 +529,14 @@ async function optimizeWithAi(input, body) {
           mode: body.mode || "auto",
           options: body.options || {},
           conversation: Array.isArray(body.conversation) ? body.conversation.slice(-12) : [],
-          formattingRule: "所有面向用户的内容都使用普通文本。小标题使用“标题：”，列表使用中文编号“（1）（2）（3）”，不要使用 Markdown。",
+          formattingRule: "所有面向用户的内容都使用普通文本。小标题使用“标题：”，列表使用中文编号“（1）（2）（3）”，不要使用 Markdown。结果要像完整 AI 任务书，而不是泛泛提示词。",
           requestedShape: {
-            prompt: "完整优化提示词，普通文本格式",
-            blueprint: "结构拆解，普通文本格式",
+            prompt: "完整 AI 任务书，普通文本格式",
+            blueprint: "交付拆解，普通文本格式",
             score: "0-100",
             scoreExplanation: "评分解释，说明为什么是这个分数以及如何提高",
             questions: ["需要追问用户的关键问题，最多 5 个"],
-            variants: [{ title: "版本名", note: "适用场景", content: "提示词内容，普通文本格式" }]
+            variants: [{ title: "版本名", note: "适用场景", content: "任务书内容，普通文本格式" }]
           }
         })
       }
@@ -641,10 +641,10 @@ function buildFallbackPrompt(input, body) {
   const mode = body.mode || "auto";
   const options = body.options || {};
   return [
-    "你是一名资深 AI 提示词架构师，请把下面的原始需求转化为可直接交给 AI 执行的高质量提示词。",
+    "你是一名资深 AI 任务书架构师，请把下面的原始想法转化为可直接交给 AI 执行的高质量任务书。",
     "请使用普通文本格式，不要使用 Markdown 标题、短横线列表、代码块或表格语法。",
     "",
-    `原始需求：${input}`,
+    `一句想法：${input}`,
     "",
     `场景：${mode}`,
     `输出语言：${options.language || "zh"}`,
