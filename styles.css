@@ -359,6 +359,10 @@ button {
   grid-template-columns: 1fr;
   gap: 14px;
   box-shadow: var(--soft-shadow);
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .input-panel {
@@ -737,6 +741,72 @@ select:hover,
 .segmented.two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 12px;
+}
+
+.workspace-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.workspace-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  background: var(--panel-solid);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.workspace-step:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  color: var(--text);
+}
+
+.workspace-step b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 0.78rem;
+}
+
+.workspace-step span {
+  font-weight: 850;
+}
+
+.workspace-step.active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 62%),
+    var(--panel-solid);
+  box-shadow: var(--soft-shadow);
+}
+
+.workspace-step.active b {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.workspace-page {
+  display: none;
+}
+
+.workspace-page.active {
+  display: block;
 }
 
 .seg-button {
@@ -1160,10 +1230,17 @@ input[type="range"] {
 }
 
 .action-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
   margin-top: 18px;
+  padding-top: 14px;
+  background:
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--panel-solid) 86%, transparent) 28%),
+    transparent;
 }
 
 .primary-button,
@@ -1765,6 +1842,10 @@ input[type="range"] {
   }
 
   .segmented.two {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-steps {
     grid-template-columns: 1fr;
   }
 

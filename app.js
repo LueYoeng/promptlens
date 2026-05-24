@@ -44,6 +44,7 @@ const elements = {
   testAI: $("#testAI"),
   aiStatus: $("#aiStatus"),
   toolModeButtons: $("#toolModeButtons"),
+  workspaceSteps: $("#workspaceSteps"),
   inputTitle: $("#inputTitle"),
   userInput: $("#userInput"),
   charCount: $("#charCount"),
@@ -261,10 +262,23 @@ let state = {
   selectedMode: "auto",
   selectedCategory: "全部",
   toolMode: "create",
+  workspaceStep: "idea",
   conversation: [],
   currentResult: emptyResult(),
   activeTab: "prompt"
 };
+
+function setWorkspaceStep(step) {
+  state.workspaceStep = step || "idea";
+  $$(".workspace-step").forEach((button) => {
+    const active = button.dataset.workspaceStep === state.workspaceStep;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  $$(".workspace-page").forEach((page) => {
+    page.classList.toggle("active", page.dataset.workspacePage === state.workspaceStep);
+  });
+}
 
 function emptyResult() {
   return {
@@ -1920,6 +1934,11 @@ function bindEvents() {
     if (button) setToolMode(button.dataset.toolMode);
   });
 
+  elements.workspaceSteps.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-workspace-step]");
+    if (button) setWorkspaceStep(button.dataset.workspaceStep);
+  });
+
   elements.modeButtons.addEventListener("click", (event) => {
     const button = event.target.closest("[data-mode]");
     if (button) setMode(button.dataset.mode);
@@ -2136,6 +2155,7 @@ function init() {
   renderFavorites();
   renderStats();
   renderWorkspaceSummary();
+  setWorkspaceStep(state.workspaceStep);
   updateDetailLabel();
   renderClarifications();
   restoreFromShare();

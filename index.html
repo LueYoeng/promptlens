@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PromptLens AI 任务书生成器</title>
-  <link rel="stylesheet" href="styles.css?v=20260524-readiness">
-  <script defer src="app.js?v=20260524-readiness"></script>
+  <link rel="stylesheet" href="styles.css?v=20260524-step-pages">
+  <script defer src="app.js?v=20260524-step-pages"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -225,6 +225,22 @@
           <button class="seg-button" type="button" data-tool-mode="rewrite">改写任务书</button>
         </div>
 
+        <div class="workspace-steps" id="workspaceSteps" role="tablist" aria-label="任务书编辑步骤">
+          <button class="workspace-step active" type="button" role="tab" aria-selected="true" data-workspace-step="idea">
+            <b>01</b>
+            <span>写想法</span>
+          </button>
+          <button class="workspace-step" type="button" role="tab" aria-selected="false" data-workspace-step="context">
+            <b>02</b>
+            <span>补信息</span>
+          </button>
+          <button class="workspace-step" type="button" role="tab" aria-selected="false" data-workspace-step="settings">
+            <b>03</b>
+            <span>高级设置</span>
+          </button>
+        </div>
+
+        <div class="workspace-page active" data-workspace-page="idea">
         <div class="writing-aid" aria-label="输入建议">
           <div>
             <span class="eyebrow">FORMULA</span>
@@ -259,7 +275,9 @@
           <div class="readiness-meter"><i id="readinessBar"></i></div>
           <div class="readiness-list" id="readinessList"></div>
         </section>
+        </div>
 
+        <div class="workspace-page" data-workspace-page="context">
         <section class="context-card">
           <div class="section-heading inline">
             <div>
@@ -319,7 +337,9 @@
             <button class="secondary-button" id="sendConversationReply" type="button">发送并优化</button>
           </div>
         </section>
+        </div>
 
+        <div class="workspace-page" data-workspace-page="settings">
         <div class="control-block">
           <label class="control-label">场景</label>
           <div class="segmented" id="modeButtons">
@@ -402,6 +422,7 @@
             <span></span>
             <b>检查清单</b>
           </label>
+        </div>
         </div>
 
         <div class="action-row">
