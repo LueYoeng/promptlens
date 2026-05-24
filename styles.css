@@ -18,7 +18,9 @@
   --warning: #a46a12;
   --shadow: 0 22px 50px rgba(21, 34, 53, 0.15);
   --soft-shadow: 0 12px 32px rgba(21, 34, 53, 0.10);
-  --radius: 8px;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
 }
 
 [data-theme="dark"] {
@@ -116,7 +118,7 @@ button {
   height: 42px;
   flex: 0 0 auto;
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  border-radius: 14px;
   background:
     linear-gradient(135deg, var(--accent) 0 34%, transparent 34% 47%, var(--coral) 47% 68%, var(--gold) 68%),
     var(--panel-solid);
@@ -131,7 +133,7 @@ button {
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.86);
-  border-radius: 6px;
+  border-radius: 9px;
 }
 
 .brand h1 {
@@ -160,7 +162,7 @@ button {
   min-height: 38px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   color: var(--muted);
   background: var(--panel);
   backdrop-filter: blur(18px);
@@ -231,7 +233,7 @@ button {
   margin-bottom: 18px;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 22px;
   background:
     linear-gradient(120deg, var(--accent-soft), transparent 46%),
     color-mix(in srgb, var(--panel-solid) 88%, transparent);
@@ -263,7 +265,7 @@ button {
   min-height: 86px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--panel-solid);
 }
 
@@ -290,7 +292,7 @@ button {
   width: 38px;
   height: 38px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   color: var(--text);
   background: var(--panel);
   cursor: pointer;
@@ -332,10 +334,11 @@ button {
 .input-panel,
 .output-panel {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 24px;
   background: var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 
 .side-panel,
@@ -377,7 +380,7 @@ button {
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
 }
 
@@ -387,7 +390,7 @@ button {
   gap: 6px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 18px;
   background:
     linear-gradient(135deg, var(--accent-soft), transparent 68%),
     var(--panel-solid);
@@ -458,9 +461,9 @@ button {
 .template-card,
 .history-card,
 .variant-card {
-  border-radius: 6px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 
 .ghost-button {
@@ -483,6 +486,7 @@ button {
   transform: translateY(-1px);
   border-color: var(--accent);
   color: var(--text);
+  box-shadow: var(--soft-shadow);
 }
 
 .search-input,
@@ -492,7 +496,7 @@ select {
   height: 40px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 14px;
   outline: 0;
   color: var(--text);
   background: var(--panel-solid);
@@ -644,7 +648,7 @@ select:hover,
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--panel-solid) 78%, transparent);
 }
 
@@ -653,7 +657,7 @@ select:hover,
   max-height: 160px;
   padding: 11px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   background: var(--panel-solid);
 }
 
@@ -668,7 +672,7 @@ select:hover,
   gap: 2px;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--panel-solid) 78%, transparent);
 }
 
@@ -687,7 +691,7 @@ select:hover,
   gap: 4px;
   padding: 11px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
 }
 
@@ -718,7 +722,7 @@ select:hover,
   gap: 6px;
   padding: 6px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--bg-strong) 68%, transparent);
 }
 
@@ -743,7 +747,7 @@ select:hover,
 .textarea-shell {
   position: relative;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 22px;
   background: var(--panel-solid);
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
@@ -797,7 +801,7 @@ input::placeholder {
   margin: 12px 0 16px;
   padding: 13px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 20px;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--gold) 12%, transparent), transparent 54%),
     color-mix(in srgb, var(--panel-solid) 78%, transparent);
@@ -834,7 +838,7 @@ input::placeholder {
   margin: 16px 0;
   padding: 13px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 20px;
   background: color-mix(in srgb, var(--panel-solid) 76%, transparent);
 }
 
@@ -853,7 +857,7 @@ input::placeholder {
   max-width: 92%;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 18px;
   color: var(--text);
   background: var(--panel-solid);
   line-height: 1.55;
@@ -898,7 +902,7 @@ input::placeholder {
   min-height: 38px;
   padding: 0 10px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 14px;
   color: var(--text);
   background: var(--panel-solid);
 }
@@ -958,7 +962,7 @@ input[type="range"] {
   min-height: 46px;
   padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   background: var(--panel-solid);
   cursor: pointer;
 }
@@ -1076,10 +1080,10 @@ input[type="range"] {
 .score {
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 62px;
+  width: 70px;
+  height: 70px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 22px;
   color: var(--accent);
   background:
     linear-gradient(var(--panel-solid), var(--panel-solid)) padding-box,
@@ -1087,9 +1091,37 @@ input[type="range"] {
 }
 
 .score span {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.score-breakdown div {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+    color-mix(in srgb, var(--panel-solid) 78%, transparent);
+}
+
+.score-breakdown span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.score-breakdown b {
+  color: var(--text);
+  font-size: 1.08rem;
 }
 
 .score small {
@@ -1107,7 +1139,7 @@ input[type="range"] {
 .quality-item {
   padding: 9px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--panel-solid) 76%, transparent);
 }
 
@@ -1158,7 +1190,7 @@ input[type="range"] {
   flex: 1;
   min-height: 400px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 22px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--panel-solid) 92%, transparent), var(--panel-solid)),
     var(--panel-solid);
@@ -1172,7 +1204,7 @@ input[type="range"] {
   height: 100%;
   min-height: 400px;
   margin: 0;
-  padding: 20px;
+  padding: 22px;
   color: var(--text);
   white-space: pre-wrap;
   overflow: auto;
@@ -1553,6 +1585,7 @@ input[type="range"] {
   .context-grid,
   .quick-actions,
   .quality-grid,
+  .score-breakdown,
   .tabs,
   .action-row,
   .conversation-reply,

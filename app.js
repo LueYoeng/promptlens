@@ -72,6 +72,9 @@ const elements = {
   generateBtn: $("#generateBtn"),
   aiEnhanceBtn: $("#aiEnhanceBtn"),
   scoreValue: $("#scoreValue"),
+  structureScoreValue: $("#structureScoreValue"),
+  aiScoreValue: $("#aiScoreValue"),
+  compositeScoreValue: $("#compositeScoreValue"),
   barClarity: $("#barClarity"),
   barContext: $("#barContext"),
   barConstraint: $("#barConstraint"),
@@ -268,6 +271,9 @@ function emptyResult() {
     variants: [],
     mode: "auto",
     score: 0,
+    structureScore: 0,
+    aiScore: null,
+    compositeScore: 0,
     scoreExplanation: "",
     questions: [],
     metrics: { clarity: 0, context: 0, constraint: 0, format: 0, action: 0 }
@@ -345,6 +351,9 @@ function normalizeServerItem(item) {
     image: item.image || "",
     variants: item.variants || [],
     score: item.score || 0,
+    structureScore: item.structureScore || item.score || 0,
+    aiScore: Number.isFinite(item.aiScore) ? item.aiScore : null,
+    compositeScore: item.compositeScore || item.score || 0,
     scoreExplanation: item.scoreExplanation || "",
     questions: item.questions || [],
     createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString("zh-CN", { hour12: false }) : new Date().toLocaleString("zh-CN", { hour12: false })
@@ -541,7 +550,7 @@ function buildPrompt(text, options) {
 
   const prompt = sections.join("\n\n");
   const metrics = calculateMetrics(text, options, mode);
-  const score = Math.round(Object.values(metrics).reduce((sum, value) => sum + value, 0) / 5);
+  const structureScore = Math.round(Object.values(metrics).reduce((sum, value) => sum + value, 0) / 5);
   const scoreExplanation = buildScoreExplanation(text, options, mode, metrics);
   return {
     mode,
@@ -551,7 +560,10 @@ function buildPrompt(text, options) {
     variants: buildVariants(text, mode, options),
     scoreExplanation,
     questions: generateClarifyingQuestions(text, mode),
-    score,
+    score: structureScore,
+    structureScore,
+    aiScore: null,
+    compositeScore: structureScore,
     metrics
   };
 }
@@ -714,6 +726,9 @@ function normalizeResultText(result) {
     prompt: plainTextBlock(result.prompt),
     blueprint: plainTextBlock(result.blueprint),
     image: plainTextBlock(result.image),
+    structureScore: Number.isFinite(result.structureScore) ? result.structureScore : Number(result.score || 0),
+    aiScore: Number.isFinite(result.aiScore) ? result.aiScore : null,
+    compositeScore: Number.isFinite(result.compositeScore) ? result.compositeScore : Number(result.score || 0),
     scoreExplanation: plainTextBlock(result.scoreExplanation),
     questions: Array.isArray(result.questions) ? result.questions : [],
     variants: (result.variants || []).map((variant) => ({
@@ -783,6 +798,25 @@ function buildScoreExplanation(text, options, mode, metrics) {
     "下一步：",
     "先补齐最关键的缺失信息，再点击“生成精准提示词”或使用“对话式优化”。"
   ].join("\n");
+}
+
+function buildCompositeScore(structureScore, aiScore) {
+  if (!Number.isFinite(aiScore)) return structureScore;
+  return Math.round(structureScore * 0.55 + aiScore * 0.45);
+}
+
+function appendScoreBreakdown(explanation, result) {
+  const aiLine = Number.isFinite(result.aiScore)
+    ? `AI质量分：${result.aiScore} 分，来自模型对增强结果质量的判断，可能比本地规则更严格。`
+    : "AI质量分：未启用。点击“AI 增强”后会显示。";
+  return [
+    explanation || "",
+    "",
+    "评分拆分：",
+    `结构分：${result.structureScore} 分，衡量提示词是否包含目标、上下文、约束、格式和可执行信息。`,
+    aiLine,
+    `综合分：${result.compositeScore} 分，按结构分 55% 和 AI质量分 45% 合成。`
+  ].filter(Boolean).join("\n");
 }
 
 function buildAuditReport(text, options, result) {
@@ -1004,10 +1038,14 @@ function applyQuickAction(action) {
   state.currentResult = normalizeResultText({
     ...baseResult,
     prompt,
-    scoreExplanation: buildScoreExplanation(source, options, getActiveMode(source), calculateMetrics(source, options, getActiveMode(source)))
+    scoreExplanation: buildScoreExplanation(source, options, getActiveMode(source), calculateMetrics(source, options, getActiveMode(source))),
+    compositeScore: baseResult.compositeScore || baseResult.score,
+    structureScore: baseResult.structureScore || baseResult.score,
+    aiScore: Number.isFinite(baseResult.aiScore) ? baseResult.aiScore : null
   });
+  state.currentResult.score = state.currentResult.compositeScore;
   elements.resultPrompt.textContent = state.currentResult.prompt;
-  elements.resultScore.textContent = state.currentResult.scoreExplanation;
+  elements.resultScore.textContent = appendScoreBreakdown(state.currentResult.scoreExplanation, state.currentResult);
   elements.resultAudit.textContent = buildAuditReport(source, options, state.currentResult);
   activateTab("prompt");
   showToast("快捷增强已应用");
@@ -1133,13 +1171,18 @@ async function loadCloudData() {
 
 function renderResult(result) {
   const normalized = normalizeResultText(result);
+  normalized.score = normalized.compositeScore;
   state.currentResult = normalized;
   elements.resultPrompt.textContent = normalized.prompt;
   elements.resultBlueprint.textContent = normalized.blueprint;
   elements.resultImage.textContent = normalized.image;
-  elements.resultScore.textContent = normalized.scoreExplanation || buildScoreExplanation(normalizeText(elements.userInput.value), collectOptions(), normalized.mode, normalized.metrics);
+  const baseExplanation = normalized.scoreExplanation || buildScoreExplanation(normalizeText(elements.userInput.value), collectOptions(), normalized.mode, normalized.metrics);
+  elements.resultScore.textContent = appendScoreBreakdown(baseExplanation, normalized);
   elements.resultAudit.textContent = buildAuditReport(normalizeText(elements.userInput.value), collectOptions(), normalized);
-  elements.scoreValue.textContent = normalized.score;
+  elements.scoreValue.textContent = normalized.compositeScore;
+  elements.structureScoreValue.textContent = normalized.structureScore;
+  elements.aiScoreValue.textContent = Number.isFinite(normalized.aiScore) ? normalized.aiScore : "未启用";
+  elements.compositeScoreValue.textContent = normalized.compositeScore;
   elements.barClarity.style.width = `${normalized.metrics.clarity || 0}%`;
   elements.barContext.style.width = `${normalized.metrics.context || 0}%`;
   elements.barConstraint.style.width = `${normalized.metrics.constraint || 0}%`;
@@ -1202,6 +1245,9 @@ async function runAIEnhance() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const fallback = buildPrompt(text, collectOptions());
+    const aiScore = Number.isFinite(Number(data.score)) ? Number(data.score) : null;
+    const structureScore = fallback.structureScore || fallback.score;
+    const compositeScore = buildCompositeScore(structureScore, aiScore);
     const result = {
       ...fallback,
       prompt: data.prompt || data.result || fallback.prompt,
@@ -1211,7 +1257,10 @@ async function runAIEnhance() {
       metrics: data.metrics || fallback.metrics,
       scoreExplanation: data.scoreExplanation || fallback.scoreExplanation,
       questions: Array.isArray(data.questions) ? data.questions : fallback.questions,
-      score: data.score || fallback.score
+      structureScore,
+      aiScore,
+      compositeScore,
+      score: compositeScore
     };
     renderResult(result);
     incrementGenerated();
@@ -1492,6 +1541,9 @@ function buildSavedItem(source) {
     image: state.currentResult.image,
     variants: state.currentResult.variants,
     score: state.currentResult.score,
+    structureScore: state.currentResult.structureScore,
+    aiScore: state.currentResult.aiScore,
+    compositeScore: state.currentResult.compositeScore,
     scoreExplanation: state.currentResult.scoreExplanation,
     questions: state.currentResult.questions,
     createdAt: new Date().toLocaleString("zh-CN", { hour12: false })
@@ -1551,7 +1603,7 @@ function renderSavedList(container, items, emptyTitle, emptyText) {
   }
   container.innerHTML = items.map((item) => `
     <button class="history-card" type="button" data-saved-id="${item.id}">
-      <strong>${modeNames[item.mode] || "提示词"} · ${item.score} 分</strong>
+      <strong>${modeNames[item.mode] || "提示词"} · 综合 ${item.compositeScore || item.score} 分</strong>
       <span>${item.createdAt}</span>
       <p>${escapeHtml(shorten(item.source, 104))}</p>
     </button>
@@ -1571,7 +1623,10 @@ function restoreSaved(id) {
     scoreExplanation: item.scoreExplanation || "",
     questions: item.questions || [],
     mode: item.mode,
-    score: item.score,
+    score: item.compositeScore || item.score,
+    structureScore: item.structureScore || item.score,
+    aiScore: Number.isFinite(item.aiScore) ? item.aiScore : null,
+    compositeScore: item.compositeScore || item.score,
     metrics: calculateMetrics(item.source, collectOptions(), item.mode)
   });
   activateTab("prompt");
@@ -1663,7 +1718,7 @@ async function recordExport(extension) {
       body: JSON.stringify({
         extension,
         source: normalizeText(elements.userInput.value),
-        score: state.currentResult.score
+        score: state.currentResult.compositeScore || state.currentResult.score
       })
     });
     renderWorkspaceSummary();

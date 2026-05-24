@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PromptLens 提示词精炼台</title>
-  <link rel="stylesheet" href="styles.css?v=20260523-expansion">
-  <script defer src="app.js?v=20260523-expansion"></script>
+  <link rel="stylesheet" href="styles.css?v=20260524-score-ui">
+  <script defer src="app.js?v=20260524-score-ui"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -405,6 +405,21 @@
           </div>
         </div>
 
+        <div class="score-breakdown" aria-label="评分拆分">
+          <div>
+            <span>结构分</span>
+            <b id="structureScoreValue">0</b>
+          </div>
+          <div>
+            <span>AI质量分</span>
+            <b id="aiScoreValue">未启用</b>
+          </div>
+          <div>
+            <span>综合分</span>
+            <b id="compositeScoreValue">0</b>
+          </div>
+        </div>
+
         <div class="quality-grid">
           <div class="quality-item">
             <span>清晰度</span>
@@ -538,7 +553,7 @@
             <ul>
               <li><strong>完整提示词：</strong>最推荐复制给 AI 使用的主版本。</li>
               <li><strong>版本对比：</strong>提供简洁版、专业版、超详细版、可直接复制版，适合不同复杂度。</li>
-              <li><strong>评分解释：</strong>说明分数来源、优势项和短板。</li>
+              <li><strong>评分解释：</strong>说明结构分、AI质量分和综合分的来源。</li>
               <li><strong>体检报告：</strong>检查目标用户、成功标准、避免事项、可衡量约束和输出格式是否完整。</li>
               <li><strong>结构拆解：</strong>告诉你这条提示词由哪些部分组成，方便继续修改。</li>
               <li><strong>图片参数：</strong>当场景是图片生成时，会给出正向提示词、负面提示词和画幅建议。</li>
