@@ -47,6 +47,9 @@ const elements = {
   inputTitle: $("#inputTitle"),
   userInput: $("#userInput"),
   charCount: $("#charCount"),
+  readinessScore: $("#readinessScore"),
+  readinessBar: $("#readinessBar"),
+  readinessList: $("#readinessList"),
   clearInput: $("#clearInput"),
   audienceInput: $("#audienceInput"),
   successMetric: $("#successMetric"),
@@ -394,6 +397,50 @@ function collectOptions() {
     includeChecklist: elements.includeChecklist.checked,
     toolMode: state.toolMode
   };
+}
+
+function renderReadiness() {
+  const text = normalizeText(elements.userInput.value);
+  const options = collectOptions();
+  const mode = getActiveMode(text);
+  const checks = [
+    {
+      label: "一句想法",
+      ok: text.length >= 12,
+      detail: text.length >= 12 ? "已经有可识别的任务意图" : "先写出你想让 AI 做什么"
+    },
+    {
+      label: "目标用户",
+      ok: Boolean(options.audience),
+      detail: options.audience || "补充结果主要给谁使用"
+    },
+    {
+      label: "成功标准",
+      ok: Boolean(options.successMetric),
+      detail: options.successMetric || "说明什么结果算完成或合格"
+    },
+    {
+      label: "边界限制",
+      ok: Boolean(options.avoidThings) || /不要|避免|限制|必须|不能/.test(text),
+      detail: options.avoidThings || "写清楚不要出现什么、必须遵守什么"
+    },
+    {
+      label: "场景识别",
+      ok: mode !== "auto",
+      detail: mode !== "auto" ? modeNames[mode] : "输入更多信息或手动选择场景"
+    }
+  ];
+  const passed = checks.filter((item) => item.ok).length;
+  const score = Math.round((passed / checks.length) * 100);
+  elements.readinessScore.textContent = `${score}%`;
+  elements.readinessBar.style.width = `${score}%`;
+  elements.readinessList.innerHTML = checks.map((item) => `
+    <div class="readiness-item ${item.ok ? "is-ready" : "is-missing"}">
+      <b>${item.ok ? "已完成" : "待补充"}</b>
+      <span>${escapeHtml(item.label)}</span>
+      <p>${escapeHtml(item.detail)}</p>
+    </div>
+  `).join("");
 }
 
 function getLanguageInstruction(language) {
@@ -1213,6 +1260,7 @@ function renderVariants(variants) {
 function generate(options = {}) {
   const text = normalizeText(elements.userInput.value);
   elements.charCount.textContent = elements.userInput.value.length;
+  renderReadiness();
   const result = buildPrompt(text, collectOptions());
   renderResult(result);
   renderClarifications();

@@ -752,6 +752,31 @@ select:hover,
   box-shadow: 0 8px 18px rgba(8, 117, 111, 0.2);
 }
 
+.writing-aid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, var(--accent-soft), transparent 62%),
+    color-mix(in srgb, var(--panel-solid) 84%, transparent);
+}
+
+.writing-aid b {
+  display: block;
+  margin-top: 2px;
+}
+
+.writing-aid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .textarea-shell {
   position: relative;
   border: 1px solid var(--line);
@@ -804,6 +829,96 @@ input::placeholder {
   border-radius: 16px;
   color: var(--text);
   background: var(--panel-solid);
+}
+
+.readiness-card {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 54%),
+    color-mix(in srgb, var(--panel-solid) 80%, transparent);
+}
+
+.readiness-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.readiness-head h3 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.readiness-head strong {
+  color: var(--accent);
+  font-size: 1.35rem;
+}
+
+.readiness-meter {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  overflow: hidden;
+}
+
+.readiness-meter i {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  transition: width 220ms ease;
+}
+
+.readiness-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.readiness-item {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--panel-solid);
+}
+
+.readiness-item b {
+  display: inline-flex;
+  margin-bottom: 7px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+}
+
+.readiness-item.is-ready b {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.readiness-item.is-missing b {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 13%, transparent);
+}
+
+.readiness-item span {
+  display: block;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.readiness-item p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 .context-card {
@@ -1650,6 +1765,11 @@ input[type="range"] {
   }
 
   .segmented.two {
+    grid-template-columns: 1fr;
+  }
+
+  .writing-aid,
+  .readiness-list {
     grid-template-columns: 1fr;
   }
 

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PromptLens AI 任务书生成器</title>
-  <link rel="stylesheet" href="styles.css?v=20260524-layout-polish">
-  <script defer src="app.js?v=20260524-layout-polish"></script>
+  <link rel="stylesheet" href="styles.css?v=20260524-readiness">
+  <script defer src="app.js?v=20260524-readiness"></script>
 </head>
 <body>
   <canvas id="ambientCanvas" class="ambient-canvas" aria-hidden="true"></canvas>
@@ -225,6 +225,14 @@
           <button class="seg-button" type="button" data-tool-mode="rewrite">改写任务书</button>
         </div>
 
+        <div class="writing-aid" aria-label="输入建议">
+          <div>
+            <span class="eyebrow">FORMULA</span>
+            <b>一句话公式</b>
+          </div>
+          <p>我想为谁做什么，需要哪些功能，最终什么结果算成功。</p>
+        </div>
+
         <div class="textarea-shell">
           <textarea id="userInput" placeholder="例如：我想做一个健身房会员管理网站，需要会员档案、课程预约、数据看板，最好能直接交给 AI 帮我开发。"></textarea>
           <div class="textarea-footer">
@@ -239,6 +247,18 @@
           <button type="button" data-example="生成一张未来城市屋顶咖啡馆的图片，雨后夜景，赛博但温暖，适合做网页首屏。">图片</button>
           <button type="button" data-example="分析一家线上课程平台最近三个月付费转化率下降的可能原因，并给出排查框架。">分析</button>
         </div>
+
+        <section class="readiness-card" aria-label="任务书准备度">
+          <div class="readiness-head">
+            <div>
+              <span class="eyebrow">READINESS</span>
+              <h3>任务书准备度</h3>
+            </div>
+            <strong id="readinessScore">0%</strong>
+          </div>
+          <div class="readiness-meter"><i id="readinessBar"></i></div>
+          <div class="readiness-list" id="readinessList"></div>
+        </section>
 
         <section class="context-card">
           <div class="section-heading inline">
