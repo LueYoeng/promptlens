@@ -2,7 +2,7 @@
   "name": "promptlens",
   "version": "1.0.0",
   "private": true,
-  "description": "PromptLens dynamic prompt optimization website",
+  "description": "PromptLens dynamic AI task brief generator",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
